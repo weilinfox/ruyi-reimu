@@ -3,7 +3,7 @@ import time
 from pathlib import Path
 
 from utils.auto_loader import auto_load
-from utils.error import AssertException
+from utils.errors import AssertException
 from utils.logger import logger
 
 

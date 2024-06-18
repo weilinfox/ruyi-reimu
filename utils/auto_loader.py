@@ -4,7 +4,7 @@ import tomllib
 import yaml
 from pathlib import Path
 
-from utils.error import ParseException
+from utils.errors import ParseException
 
 
 def auto_load(fn: str | Path) -> dict:
