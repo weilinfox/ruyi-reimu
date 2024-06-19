@@ -1,5 +1,6 @@
 
 import time
+from os import environ
 from pathlib import Path
 
 from utils.auto_loader import auto_load
@@ -13,6 +14,9 @@ class Config:
     upstream_file = "upstream.toml"
 
     def __init__(self):
+        self.http_proxy = ""
+        self.https_proxy = ""
+
         self.config_file = Path(Config.config_file)
         self.upstream_file = Path(Config.upstream_file)
 
@@ -68,10 +72,20 @@ class Config:
                 logger.info("No ruyi_repo.branch configration found, use default branch " + self.ruyi_repo_branch)
             else:
                 self.ruyi_repo_branch = ruyi_repo["branch"]
-        if "tmpdir" not in config_dict.keys():
-            logger.info("No tmpdir configration found, use default value " + str(self.tmpdir))
+        if "sys" not in config_dict.keys():
+            logger.info("No system configuration found, use default settings")
         else:
-            self.tmpdir = Path(config_dict["tmpdir"])
+            sis = config_dict['sys']
+            if "tmpdir" not in sis.keys():
+                logger.info("No tmpdir configration found, use default value " + str(self.tmpdir))
+            else:
+                self.tmpdir = Path(config_dict["tmpdir"])
+            if "http_proxy" in sis.keys():
+                self.http_proxy = sis["http_proxy"]
+                environ["http_proxy"] = sis["http_proxy"]
+            if "https_proxy" in sis.keys():
+                self.https_proxy = sis["https_proxy"]
+                environ["https_proxy"] = sis["https_proxy"]
 
         # check tmpdir exists
         if self.tmpdir.exists():
@@ -95,6 +109,7 @@ class Config:
         gh_op.init(self.github_token)
 
         self._ready = True
+        logger.info("Configuration load done.")
 
 
 reimu_config = Config()
