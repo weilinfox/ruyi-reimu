@@ -1,3 +1,10 @@
 
+[sys]
+https_proxy = ""
+
 [github]
 github_token = ""
+
+[ruyi_repo]
+repo = "https://gitee.com/ruyisdk/packages-index/"
+branch = "main"
