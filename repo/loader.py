@@ -1,7 +1,6 @@
 
 import pygit2
 import shutil
-from packaging.version import InvalidVersion, Version
 from pathlib import Path
 
 from config.loader import reimu_config
@@ -22,8 +21,8 @@ class RepoBoardImage:
 
     def __new__(cls, *args):
         image_type = ""
-        if isinstance(args[0], dict):
-            image_type = args[0].get("type")
+        if isinstance(args[1], dict):
+            image_type = args[1].get("type")
 
         if image_type == "GITHUB_SINGLE":
             cls = RepoGithubSingleImage
@@ -37,16 +36,16 @@ class RepoBoardImage:
 
     def check(self):
         if len(self.ruyi_repo_cfg) > 0:
-            logger.info("Skip board image \"{}\"".format(self.ruyi_repo_cfg[0]["metadata"]["desc"]))
+            logger.info("Skip board image \"{}\"".format(self.title))
         else:
             logger.warn("Skip strange board image")
 
 
 class GthubSingleImage(BoardImage):
-    def __init__(self, name:str, distfiles: list[dict]):
+    def __init__(self, name:str, distfiles: dict):
         super().__init__(name, distfiles)
-        self.filename = distfiles[0]["name"]
-        self.size = int(distfiles[0]["size"])
+        self.filename = distfiles["name"]
+        self.size = int(distfiles["size"])
 
 
 class RepoGithubSingleImage(RepoBoardImage):
@@ -59,38 +58,39 @@ class RepoGithubSingleImage(RepoBoardImage):
             self.ruyi_repo.append(GthubSingleImage(list(i.keys())[0], list(i.values())[0]["distfiles"][0]))
 
     def check(self):
+        logger.info("Check board image {}".format(self.title))
         upstream_releases = gh_op.get_repo_releases(self.upstream_repo)
-        latest = Version("0.0.0")
+        latest = ""
         now = []
 
         # check list
         names = []
-        size = []
+        sizes = []
         for i in self.ruyi_repo:
             names.append(i.filename)
-            size.append(i.size)
+            sizes.append(i.size)
 
         for u in upstream_releases:
-            # get latest valid version
-            try:
-                nv = Version(u.title)
-                if latest < nv:
-                    latest = nv
-            except InvalidVersion:
-                continue
-            else:
-                # check assets
-                for a in u.get_assets():
-                    get = []
-                    for i in range(len(names)):
-                        if names[i] == a.name and size[i] == a.size:
-                            now.append(nv)
-                            get.append(i)
+            # get latest version
+            # versions are sort in time,
+            # but we cannot sort these version code
+            # they could in invalid version format
+            if latest == "":
+                latest = u.title
+
+            # check assets
+            for a in u.get_assets():
+                get = []
+                for i in range(len(names)):
+                    if names[i] == a.name and sizes[i] == a.size:
+                        now.append(u.title)
+                        get.append(i)
                     # remove found item
-                    for i in range(len(get)):
-                        names.remove(get[i] - i)
-                    if len(names) == 0:
-                        break
+                for i in range(len(get)):
+                    names.pop(get[i] - i)
+                    sizes.pop(get[i] - i)
+                if len(names) == 0:
+                    break
 
             if len(names) == 0:
                 break
@@ -102,7 +102,9 @@ class RepoGithubSingleImage(RepoBoardImage):
                 break
         if flag:
             # send issue
-            logger.warn("In board image {}, the latest version is {}", self.title, latest)
+            logger.warn("In board image {}, the latest version is {}".format(self.title, latest))
+        else:
+            logger.warn("Board image {} already the latest".format(self.title))
 
 
 class Repo:
@@ -139,6 +141,11 @@ class Repo:
             self.board_image.append(RepoBoardImage(i.name, reimu_config.ruyi_repo_upstreams.get(i.name), cfgs))
 
         self._ready = True
+        logger.info("Ruyi repository load done")
+
+    def check(self):
+        for bi in self.board_image:
+            bi.check()
 
 
 ruyi_repo = Repo()
