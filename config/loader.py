@@ -4,6 +4,7 @@ from pathlib import Path
 
 from utils.auto_loader import auto_load
 from utils.errors import AssertException
+from utils.github_operation import gh_op
 from utils.logger import logger
 
 
@@ -63,6 +64,8 @@ class Config:
                 t.unlink()
             t.touch()
             t.unlink()
+
+        gh_op.init(self.github_token)
 
         self.ready = True
 
