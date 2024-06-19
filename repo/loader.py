@@ -106,6 +106,10 @@ class RepoGithubSingleImage(RepoBoardImage):
         else:
             logger.warn("Board image {} already the latest".format(self.title))
 
+        if len(names):
+            logger.warn("In board image {}, following files not found in upstream releases {}"
+                        .format(self.title, str(names)))
+
 
 class Repo:
     def __init__(self):
