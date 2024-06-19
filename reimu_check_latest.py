@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 
 from config.loader import reimu_config
 from repo.loader import ruyi_repo
