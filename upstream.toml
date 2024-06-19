@@ -2,3 +2,39 @@
 [armbian-pine64-star64]
 type = "GITHUB_SINGLE"
 repo = "armbian/community"
+
+[buildroot-sdk-milkv-duo-python]
+type = "GITHUB_SINGLE"
+repo = "milkv-duo/duo-buildroot-sdk"
+
+[buildroot-sdk-milkv-duo]
+type = "GITHUB_SINGLE"
+repo = "milkv-duo/duo-buildroot-sdk"
+
+[buildroot-sdk-milkv-duo256m-python]
+type = "GITHUB_SINGLE"
+repo = "milkv-duo/duo-buildroot-sdk"
+
+[buildroot-sdk-milkv-duo256m]
+type = "GITHUB_SINGLE"
+repo = "milkv-duo/duo-buildroot-sdk"
+
+[buildroot-sdk-milkv-duos-sd]
+type = "GITHUB_SINGLE"
+repo = "milkv-duo/duo-buildroot-sdk"
+
+[buildroot-sdk-sipeed-licheervnano]
+type = "GITHUB_SINGLE"
+repo = "sipeed/LicheeRV-Nano-Build"
+
+[debian-desktop-sdk-milkv-mars-cm-sd]
+type = "GITHUB_SINGLE"
+repo = "milkv-mars/mars-buildroot-sdk"
+
+[debian-desktop-sdk-milkv-mars-sd]
+type = "GITHUB_SINGLE"
+repo = "milkv-mars/mars-buildroot-sdk"
+
+[debian-fishwaldo-sg200x-sipeed-licheervnano]
+type = "GITHUB_SINGLE"
+repo = "Fishwaldo/sophgo-sg200x-debian"
