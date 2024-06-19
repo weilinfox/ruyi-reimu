@@ -53,6 +53,7 @@ class RepoGithubSingleImage(RepoBoardImage):
     def __init__(self, title: str, upstream_cfg: dict, ruyi_repo_cfg: list[dict]):
         super().__init__(title, upstream_cfg, ruyi_repo_cfg)
         self.upstream_repo = upstream_cfg["repo"]
+        self.issueto = upstream_cfg["issueto"]
         self.ruyi_repo = []
         for i in ruyi_repo_cfg:
             self.ruyi_repo.append(GthubSingleImage(list(i.keys())[0], list(i.values())[0]["distfiles"][0]))
@@ -96,6 +97,8 @@ class RepoGithubSingleImage(RepoBoardImage):
                 break
 
         flag = True
+        title = "[ruyi-reimu] Board image {} need update".format(self.title)
+        body = "## Description\n"
         for v in now:
             if v == latest:
                 flag = False
@@ -103,12 +106,24 @@ class RepoGithubSingleImage(RepoBoardImage):
         if flag:
             # send issue
             logger.warn("In board image {}, the latest version is {}".format(self.title, latest))
+            body += ("\n+ In upstream repo [{0}](https://github.com/{0}/), "
+                     "the latest version is [{1}](https://github.com/{0}/releases/{1})"
+                     .format(self.upstream_repo, latest))
         else:
             logger.warn("Board image {} already the latest".format(self.title))
 
         if len(names):
+            flag = True
             logger.warn("In board image {}, following files not found in upstream releases {}"
                         .format(self.title, str(names)))
+            body += ("\n+ In upstream repo [{0}](https://github.com/{0}/), these images are missing"
+                     .format(self.upstream_repo))
+            for n in names:
+                body += "\n   +{}".format(n)
+
+        # send issue
+        if flag:
+            gh_op.create_issue(self.issueto, title, body)
 
 
 class Repo:
