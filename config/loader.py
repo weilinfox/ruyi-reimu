@@ -9,9 +9,14 @@ from utils.logger import logger
 
 
 class Config:
+    config_file = "config.toml"
+    upstream_file = "upstream.toml"
 
     def __init__(self):
-        self.ready = False
+        self.config_file = Path(Config.config_file)
+        self.upstream_file = Path(Config.upstream_file)
+
+        self._ready = False
         self.github_token = ""
         self.ruyi_repo = "https://github.com/ruyisdk/packages-index.git"
         self.ruyi_repo_branch = "main"
@@ -19,17 +24,36 @@ class Config:
         self.tmpdir = Path("/tmp/ruyi_reimu")
 
     def ready(self) -> bool:
-        return self.ready
+        return self._ready
 
-    def load(self, config_file: str, upstream_file: str):
-        if not Path.is_file(Path(config_file)):
-            raise AssertException("Config file not found: " + config_file)
-        if not Path.is_file(Path(upstream_file)):
-            raise AssertException("Upstream file not found: " + upstream_file)
+    @staticmethod
+    def check_config_file(name) -> Path:
+        cfgs = [Path('~/.config/ruyi-reimu').expanduser().joinpath(name),
+                Path('/etc/ruyi-reimu').joinpath(name)]
+        for c in cfgs:
+            if c.is_file():
+                return c
+        return Path(name)
+
+    @staticmethod
+    def check_upstream_file() -> Path:
+        return Config.check_config_file(Config.upstream_file)
+
+    @staticmethod
+    def check_configuration_file() -> Path:
+        return Config.check_config_file(Config.config_file)
+
+    def load(self, config_file="", upstream_file=""):
+        self.config_file = self.check_configuration_file() if config_file == "" else Path(config_file)
+        self.upstream_file = self.check_upstream_file() if upstream_file == "" else Path(upstream_file)
+        if not self.config_file.is_file():
+            raise AssertException("Config file not found: " + str(self.config_file))
+        if not self.upstream_file.is_file():
+            raise AssertException("Upstream file not found: " + str(self.upstream_file))
 
         # load config file
-        config_dict = auto_load(config_file)
-        self.ruyi_repo_upstreams = auto_load(upstream_file)
+        config_dict = auto_load(self.config_file)
+        self.ruyi_repo_upstreams = auto_load(self.upstream_file)
         self.github_token = config_dict["github"]["github_token"]
 
         if "ruyi_repo" not in config_dict.keys():
@@ -49,25 +73,28 @@ class Config:
         else:
             self.tmpdir = Path(config_dict["tmpdir"])
 
-        # check tmpdir
-        if not Path.is_dir(self.tmpdir):
-            new_name = str(self.tmpdir) + "_" + str(time.time_ns()) + ".old"
-            logger.warn("The tmpdir {} exists and not a directory, rename to ".format(self.tmpdir, self.tmpdir))
-            logger.warn("Before rename, wait for 6 seconds...")
-            time.sleep(6)
-            self.tmpdir.rename(new_name)
-            logger.info("Rename done")
-            self.tmpdir.mkdir()
+        # check tmpdir exists
+        if self.tmpdir.exists():
+            if not self.tmpdir.is_dir():
+                new_name = str(self.tmpdir) + "_" + str(time.time_ns()) + ".old"
+                logger.warn("The tmpdir {} exists and not a directory, rename to {}".format(self.tmpdir, new_name))
+                logger.warn("Before rename, wait for 6 seconds...")
+                time.sleep(6)
+                self.tmpdir.rename(new_name)
+                logger.info("Rename done")
+                self.tmpdir.mkdir()
         else:
-            t = self.tmpdir.joinpath("test_creation")
-            if t.exists():
-                t.unlink()
-            t.touch()
+            self.tmpdir.mkdir()
+
+        t = self.tmpdir.joinpath("test_creation")
+        if t.exists():
             t.unlink()
+        t.touch()
+        t.unlink()
 
         gh_op.init(self.github_token)
 
-        self.ready = True
+        self._ready = True
 
 
 reimu_config = Config()

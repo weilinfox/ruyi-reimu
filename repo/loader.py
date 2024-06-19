@@ -107,14 +107,14 @@ class RepoGithubSingleImage(RepoBoardImage):
 
 class Repo:
     def __init__(self):
-        self.ready = False
+        self._ready = False
         self.board_image = []
         self.repo_cache = Path()
 
     def ready(self) -> bool:
-        return self.ready
+        return self._ready
 
-    def load(self, url: str):
+    def load(self):
         if not reimu_config.ready():
             raise Exception("ruyi-reimu not configured")
 
@@ -138,7 +138,7 @@ class Repo:
                     cfgs.append({c.stem: d})
             self.board_image.append(RepoBoardImage(i.name, reimu_config.ruyi_repo_upstreams.get(i.name), cfgs))
 
-        self.ready = True
+        self._ready = True
 
 
 ruyi_repo = Repo()
