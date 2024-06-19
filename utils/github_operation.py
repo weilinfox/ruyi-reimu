@@ -19,12 +19,14 @@ class GithubOperation:
 
     def create_issue(self, repo: str, title: str, body: str):
         repo = self.gh.get_repo(repo)
-        for i in repo.get_issues(state="open"):
+        for i in repo.get_issues(state="all"):
             if i.title == title:
-                logger.info("Issue \"{}\" already opened in repo {}".format(title, repo.full_name))
-                return
-        repo.create_issue(title, body)
-        logger.info("Issue \"{}\" created in repo {}".format(title, repo.full_name))
+                if i.state == "open":
+                    logger.info("Issue \"{}\" already opened in repo {}".format(title, repo.full_name))
+                else:
+                    i.edit(state="open")
+                    i.create_comment(body)
+                    logger.info("Issue \"{}\" was reopened with comment in repo {}".format(title, repo.full_name))
 
 
 gh_op = GithubOperation()
