@@ -12,7 +12,7 @@ from utils.logger import logger
 
 
 class BoardImage:
-    def __init__(self, name: str, distfiles: list):
+    def __init__(self, name: str, distfiles: dict):
         self.name = name
         self.distfiles = distfiles
 
@@ -42,7 +42,7 @@ class RepoBoardImage:
 
 
 class GthubSingleImage(BoardImage):
-    def __init__(self, name:str, distfiles: dict):
+    def __init__(self, name: str, distfiles: dict):
         super().__init__(name, distfiles)
         self.filename = distfiles["name"]
         self.size = int(distfiles["size"])

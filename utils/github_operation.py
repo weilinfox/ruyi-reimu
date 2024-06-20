@@ -27,6 +27,9 @@ class GithubOperation:
                     i.edit(state="open")
                     i.create_comment(body)
                     logger.info("Issue \"{}\" was reopened with comment in repo {}".format(title, repo.full_name))
+                return
+
+        repo.create_issue(title, body)
 
 
 gh_op = GithubOperation()
