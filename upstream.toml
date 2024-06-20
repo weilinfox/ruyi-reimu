@@ -48,3 +48,22 @@ repo = "milkv-mars/mars-buildroot-sdk"
 type = "GITHUB_SINGLE"
 issueto = "weilinfox/ruyi-reimu"
 repo = "Fishwaldo/sophgo-sg200x-debian"
+
+[revyos-milkv-meles]
+type = "GITHUB_MULTI"
+
+[revyos-sg2042-milkv-pioneer]
+type = "MIRROR_SINGLE"
+host = "mirror.iscas.ac.cn"
+path = "/revyos/extra/images/sg2042"
+match = "^[0-9]+$"
+issueto = "weilinfox/ruyi-reimu"
+
+[revyos-sipeed-lc4a]
+type = "MIRROR_MULTI"
+
+[revyos-sipeed-lcon4a]
+type = "GITHUB_MULTI"
+
+[revyos-sipeed-lpi4a]
+type = "GITHUB_MULTI"
