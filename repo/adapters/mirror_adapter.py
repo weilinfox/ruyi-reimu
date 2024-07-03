@@ -11,12 +11,19 @@ class MirrorAdapter:
 
     def __new__(cls, *args):
 
-        if args[0] == "mirror.iscas.ac.cn":
+        if args[1] == "mirror.iscas.ac.cn":
             cls = IscasMirrorAdapter
 
         return object.__new__(cls)
 
-    def __init__(self, host: str, path: str):
+    def __init__(self, protocol: str, host: str, path: str):
+        """
+
+        :param protocol: http/https
+        :param host: hostname
+        :param path: Absolute path
+        """
+        self.protocol = protocol
         self.host = host
         self.path = path
 
@@ -32,11 +39,11 @@ class MirrorAdapter:
 
 class IscasMirrorAdapter(MirrorAdapter):
 
-    def __init__(self, host: str, path: str):
-        super().__init__(host, path)
+    def __init__(self, protocol: str, host: str, path: str):
+        super().__init__(protocol, host, path)
 
     def get_url(self) -> str:
-        return "https://{}{}/".format(self.host, self.path)
+        return "{}://{}{}/".format(self.protocol, self.host, self.path)
 
     def get_releases(self, version_match: str) -> list[str]:
         url = self.get_url()

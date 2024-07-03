@@ -4,6 +4,7 @@ https_proxy = ""
 
 [github]
 github_token = ""
+issue_to = "weilinfox/ruyi-reimu"
 
 [ruyi_repo]
 repo = "https://gitee.com/ruyisdk/packages-index/"

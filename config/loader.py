@@ -11,20 +11,21 @@ from utils.logger import logger
 
 class Config:
     config_file = "config.toml"
-    upstream_file = "upstream.toml"
+    mirror_file = "mirrors.toml"
 
     def __init__(self):
         self.http_proxy = ""
         self.https_proxy = ""
 
         self.config_file = Path(Config.config_file)
-        self.upstream_file = Path(Config.upstream_file)
+        self.mirror_file = Path(Config.mirror_file)
 
         self._ready = False
         self.github_token = ""
+        self.issue_to = ""
         self.ruyi_repo = "https://github.com/ruyisdk/packages-index.git"
         self.ruyi_repo_branch = "main"
-        self.ruyi_repo_upstreams = {}
+        self.ruyi_repo_mirrors = {}
         self.tmpdir = Path("/tmp/ruyi_reimu")
 
     def ready(self) -> bool:
@@ -40,25 +41,26 @@ class Config:
         return Path(name)
 
     @staticmethod
-    def check_upstream_file() -> Path:
-        return Config.check_config_file(Config.upstream_file)
+    def check_mirror_file() -> Path:
+        return Config.check_config_file(Config.mirror_file)
 
     @staticmethod
     def check_configuration_file() -> Path:
         return Config.check_config_file(Config.config_file)
 
-    def load(self, config_file="", upstream_file=""):
+    def load(self, config_file="", mirror_file=""):
         self.config_file = self.check_configuration_file() if config_file == "" else Path(config_file)
-        self.upstream_file = self.check_upstream_file() if upstream_file == "" else Path(upstream_file)
+        self.mirror_file = self.check_mirror_file() if mirror_file == "" else Path(mirror_file)
         if not self.config_file.is_file():
             raise AssertException("Config file not found: " + str(self.config_file))
-        if not self.upstream_file.is_file():
-            raise AssertException("Upstream file not found: " + str(self.upstream_file))
+        if not self.mirror_file.is_file():
+            raise AssertException("Mirror file not found: " + str(self.mirror_file))
 
         # load config file
         config_dict = auto_load(self.config_file)
-        self.ruyi_repo_upstreams = auto_load(self.upstream_file)
+        self.ruyi_repo_mirrors = auto_load(self.mirror_file)
         self.github_token = config_dict["github"]["github_token"]
+        self.issue_to = config_dict["github"]["issue_to"]
 
         if "ruyi_repo" not in config_dict.keys():
             logger.info("No ruyi_repo configration found, use default repo")
@@ -109,7 +111,7 @@ class Config:
         gh_op.init(self.github_token)
 
         self._ready = True
-        logger.info("Configuration load done.")
+        logger.info("Configuration load done.\n\n")
 
 
 reimu_config = Config()

@@ -1,0 +1,20 @@
+# 同一域名下仓库格式统一 repo 直接从 url 获取
+["github.com"]
+repo="1..2"
+version="-2"
+
+# 同一域名下仓库格式不统一 指定 repo
+[["mirror.iscas.ac.cn"]]
+repo="1"
+repo_name="revyos"
+version="-2"
+version_match = "^[0-9]+$"
+
+[["mirror.iscas.ac.cn"]]
+repo="2"
+repo_name="openEuler-RISC-V"
+version="-3"
+
+#["downloads.openwrt.org"]
+#repo="-3"
+#version="2"
