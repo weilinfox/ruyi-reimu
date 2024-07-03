@@ -11,8 +11,11 @@ class MirrorAdapter:
 
     def __new__(cls, *args):
 
-        if args[1] == "mirror.iscas.ac.cn":
+        host = args[1]
+        if host == "mirror.iscas.ac.cn":
             cls = IscasMirrorAdapter
+        elif host == "downloads.openwrt.org":
+            cls = OpenWrtDownloadsMirrorAdapter
 
         return object.__new__(cls)
 
@@ -28,22 +31,19 @@ class MirrorAdapter:
         self.path = path
 
     def get_url(self) -> str:
-        return ""
+        return "{}://{}{}/".format(self.protocol, self.host, self.path)
 
     def get_releases(self, version_match: str) -> list[str]:
         return []
 
     def find_assets(self, release: str, filenames: list[str]) -> bool:
-        return
+        return False
 
 
 class IscasMirrorAdapter(MirrorAdapter):
 
     def __init__(self, protocol: str, host: str, path: str):
         super().__init__(protocol, host, path)
-
-    def get_url(self) -> str:
-        return "{}://{}{}/".format(self.protocol, self.host, self.path)
 
     def get_releases(self, version_match: str) -> list[str]:
         url = self.get_url()
@@ -60,7 +60,9 @@ class IscasMirrorAdapter(MirrorAdapter):
             if vs is None:
                 continue
             vs = vs.text
-            if len(vs) and vs[-1] == '/':
+            if len(vs) == 0:
+                continue
+            if vs[-1] == '/':
                 vs = vs[:-1]
             if re.match(version_match, vs):
                 vss.append(vs)
@@ -108,3 +110,33 @@ class IscasMirrorAdapter(MirrorAdapter):
         :return: Some files were found in this release
         """
         return self._find_assets_in("https://{}{}/{}/".format(self.host, self.path, release), filenames)
+
+
+class OpenWrtDownloadsMirrorAdapter(MirrorAdapter):
+
+    def __init__(self, protocol: str, host: str, path: str):
+        super().__init__(protocol, host, path)
+
+    def get_releases(self, version_match: str) -> list[str]:
+        url = self.get_url()
+        resp = requests.get(url)
+
+        if resp.status_code != 200:
+            raise NetworkException("Get {} get code {}".format(url, str(resp.status_code)))
+
+        soup = BeautifulSoup(resp.text, 'html.parser')
+
+        vss = []
+        for tr in soup.find_all("tr"):
+            vs = tr.a
+            if vs is None:
+                continue
+            vs = vs.text
+            if not vs:
+                continue
+            if vs[-1] == '/':
+                vs = vs[:-1]
+            if not version_match or re.match(version_match, vs):
+                vss.append(vs)
+
+        return vss

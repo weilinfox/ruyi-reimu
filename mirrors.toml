@@ -15,6 +15,7 @@ repo="2"
 repo_name="openEuler-RISC-V"
 version="-3"
 
-#["downloads.openwrt.org"]
-#repo="-3"
-#version="2"
+["downloads.openwrt.org"]
+repo="-3"
+version="2"
+version_match = "[0-9]+.[0-9]+.[0-9]+.*"
