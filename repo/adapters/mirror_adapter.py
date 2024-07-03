@@ -16,6 +16,8 @@ class MirrorAdapter:
             cls = IscasMirrorAdapter
         elif host == "downloads.openwrt.org":
             cls = OpenWrtDownloadsMirrorAdapter
+        elif host == "cdimage.ubuntu.com":
+            cls = UbuntuCdimageMirrorAdapter
 
         return object.__new__(cls)
 
@@ -132,6 +134,36 @@ class OpenWrtDownloadsMirrorAdapter(MirrorAdapter):
             if vs is None:
                 continue
             vs = vs.text
+            if not vs:
+                continue
+            if vs[-1] == '/':
+                vs = vs[:-1]
+            if not version_match or re.match(version_match, vs):
+                vss.append(vs)
+
+        return vss
+
+
+class UbuntuCdimageMirrorAdapter(MirrorAdapter):
+
+    def __init__(self, protocol: str, host: str, path: str):
+        super().__init__(protocol, host, path)
+
+    def get_releases(self, version_match: str) -> list[str]:
+        url = self.get_url()
+        resp = requests.get(url)
+
+        if resp.status_code != 200:
+            raise NetworkException("Get {} get code {}".format(url, str(resp.status_code)))
+
+        soup = BeautifulSoup(resp.text, 'html.parser')
+
+        vss = []
+        for tr in soup.find_all("li"):
+            vs = tr.a
+            if vs is None:
+                continue
+            vs = vs.text.strip()
             if not vs:
                 continue
             if vs[-1] == '/':
