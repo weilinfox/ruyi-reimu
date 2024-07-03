@@ -20,6 +20,11 @@ repo="-3"
 version="2"
 version_match = "[0-9]+.[0-9]+.[0-9]+.*"
 
+["download.freebsd.org"]
+repo="-3"
+version="-2"
+version_match = "[0-9]+.[0-9]+.*"
+
 ["cdimage.ubuntu.com"]
 repo="-3"
 version="2"
