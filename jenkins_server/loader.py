@@ -3,6 +3,7 @@ import time
 import xml.etree.ElementTree as ElementTree
 
 from config.loader import reimu_config
+from utils.errors import AssertException
 from utils.logger import logger
 
 
@@ -17,6 +18,10 @@ class JenkinsServer:
         self._host = ""
         self._username = ""
         self._password = ""
+
+        self.clouds = {}
+        self.nodes = {}
+        self.test_platforms = {}
 
     def load(self):
         if not reimu_config.ready():
@@ -36,6 +41,32 @@ class JenkinsServer:
 
         self._jenkins_folder_create()
 
+        # Clouds/nodes info
+        clouds = reimu_config.youmu_jenkins["jenkins"]["clouds"]
+        test = reimu_config.youmu_jenkins["test_platforms"]
+        if not isinstance(clouds, list):
+            raise AssertException("jenkins.clouds not a list type")
+        if not isinstance(test, dict):
+            raise AssertException("jenkins.test_platforms not a dist type")
+        for p in test.items():
+            self.test_platforms[p[0]] = {"labels": p[1]}
+
+        for c in clouds:
+            nodes = []
+            for a in reimu_config.youmu_jenkins["agent_"+c]:
+                labels = []
+                nodes.append(a["name"])
+                for lb in self.server.get_node_info(a["name"])["assignedLabels"]:
+                    labels.append(lb["name"])
+                self.nodes[a["name"]] = {"type": a["type"],
+                                         "labels": labels,
+                                         "cloud": c}
+            capa = int(reimu_config.youmu_jenkins["cfg_" + c]["capacity"])
+            if capa == 0:
+                capa = len(nodes)
+            self.clouds[c] = {"capacity": capa,
+                              "nodes": nodes}
+
         logger.info("Jenkins server check done.\n\n")
 
     def _new_server(self):
@@ -45,6 +76,8 @@ class JenkinsServer:
         """
         All jobs in one folder
         """
+        self._new_server()
+
         job_name = JenkinsServer.FOLDER_NAME
 
         if self.server.job_exists(job_name) and not self.server.is_folder(job_name):
@@ -74,10 +107,12 @@ class JenkinsServer:
         else:
             logger.info("Use existing jenkins job folder {}".format(job_name))
 
-    def _jenkins_job_create(self, job_name: str):
+    def _jenkins_job_create(self, job_name: str, labels="", cmd="", artifacts=""):
         """
         Create job in folder
         """
+        self._new_server()
+
         job_name = "{}/{}".format(JenkinsServer.FOLDER_NAME, job_name)
 
         if self.server.job_exists(job_name) and self.server.is_folder(job_name):
@@ -86,12 +121,13 @@ class JenkinsServer:
 
         if not self.server.job_exists(job_name):
             logger.info("Create jenkins job {}".format(job_name))
-            self.server.create_job(job_name, JenkinsServer._jenkins_job_gen_xml())
+            self.server.create_job(job_name, JenkinsServer._jenkins_job_gen_xml(labels, cmd, artifacts))
         else:
-            logger.info("Use existing jenkins job {}".format(job_name))
+            logger.info("Reconfigure existing jenkins job {}".format(job_name))
+            self.server.reconfig_job(job_name, JenkinsServer._jenkins_job_gen_xml(labels, cmd, artifacts))
 
     @staticmethod
-    def _jenkins_job_gen_xml(labels="", cmd="", artifacts="") -> str:
+    def _jenkins_job_gen_xml(labels: str, cmd: str, artifacts: str) -> str:
         et = ElementTree.fromstring(jenkins.EMPTY_CONFIG_XML)
 
         shell_ele = ElementTree.Element("hudson.tasks.Shell")

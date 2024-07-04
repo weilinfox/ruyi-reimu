@@ -37,3 +37,9 @@ type = "archlinux"
 [[agent_cloud2]]
 name = "openEuler-24.03-lxc0"
 type = "fedora"
+
+# Test Platforms
+[test_platforms]
+# Platform = [ Labels ]
+ubuntu2404-x86_64 = ["ubuntu2404", "x86_64"]
+gentoo-x86_64 = ["gentoo", "x86_64"]
