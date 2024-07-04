@@ -12,6 +12,7 @@ from utils.logger import logger
 class Config:
     config_file = "config.toml"
     mirror_file = "mirrors.toml"
+    jenkins_file = "jenkins.toml"
 
     def __init__(self):
         self.http_proxy = ""
@@ -26,6 +27,7 @@ class Config:
         self.ruyi_repo = "https://github.com/ruyisdk/packages-index.git"
         self.ruyi_repo_branch = "main"
         self.ruyi_repo_mirrors = {}
+        self.youmu_jenkins = {}
         self.tmpdir = Path("/tmp/ruyi_reimu")
 
     def ready(self) -> bool:
@@ -48,17 +50,25 @@ class Config:
     def check_configuration_file() -> Path:
         return Config.check_config_file(Config.config_file)
 
-    def load(self, config_file="", mirror_file=""):
+    @staticmethod
+    def check_jenkins_file() -> Path:
+        return Config.check_config_file(Config.jenkins_file)
+
+    def load(self, config_file="", mirror_file="", jenkins_file=""):
         self.config_file = self.check_configuration_file() if config_file == "" else Path(config_file)
         self.mirror_file = self.check_mirror_file() if mirror_file == "" else Path(mirror_file)
+        self.jenkins_file = self.check_jenkins_file() if jenkins_file == "" else Path(jenkins_file)
         if not self.config_file.is_file():
             raise AssertException("Config file not found: " + str(self.config_file))
         if not self.mirror_file.is_file():
             raise AssertException("Mirror file not found: " + str(self.mirror_file))
+        if not self.jenkins_file.is_file():
+            raise AssertException("Mirror file not found: " + str(self.jenkins_file))
 
         # load config file
         config_dict = auto_load(self.config_file)
         self.ruyi_repo_mirrors = auto_load(self.mirror_file)
+        self.youmu_jenkins = auto_load(self.jenkins_file)
         self.github_token = config_dict["github"]["github_token"]
         self.issue_to = config_dict["github"]["issue_to"]
 

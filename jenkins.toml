@@ -1,0 +1,39 @@
+[jenkins]
+host = "http://127.0.0.1:8090"
+username = "reimu"
+password = "myon"
+
+# Clouds
+clouds = ["cloud1", "cloud2"]
+
+# Cloud Configuration
+[cfg_cloud1]
+# Concurrent Agents Capacity
+capacity = 5
+
+[cfg_cloud2]
+# No limitation
+capacity = 0
+
+# Agents in Clouds
+[[agent_cloud1]]
+# Name of Jenkins Node
+name = "kvm_gentoo_openrc_0"
+# For package installing command generation
+type = "gentoo"
+
+[[agent_cloud1]]
+name = "kvm_ubuntu-24.04_0"
+type = "debian"
+
+[[agent_cloud1]]
+name = "riscv64_fedora-38_0"
+type = "fedora"
+
+[[agent_cloud2]]
+name = "archlinux-lxc0"
+type = "archlinux"
+
+[[agent_cloud2]]
+name = "openEuler-24.03-lxc0"
+type = "fedora"
