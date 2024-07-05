@@ -6,11 +6,11 @@ RuyiSDK 测试调度程序
 
 [packages-index](https://github.com/ruyisdk/packages-index/) board image 上游版本跟踪。
 
-[x] packages-index 版本列表获取
-[x] 上游镜像版本列表获取
-[ ] 上游版本排序
-[x] 版本比对
-[x] issue 提交
++ [x] packages-index 版本列表获取
++ [x] 上游镜像版本列表获取
++ [ ] 上游版本排序
++ [x] 版本比对
++ [x] issue 提交
 
 假设 packages-index 每个配置文件的 url 列表中，只有一个上游 url。维护一个上游 hostname 列表，从每个配置文件的 url 列表中找到这个上游链接，
 从该上游 url 中获取版本，再从对应页面获取版本列表。
@@ -28,9 +28,9 @@ RuyiSDK 测试调度程序
 
 ruyi 上游版本跟踪和自动化测试调度和报告汇总。
 
-[x] Jenkins 配置
-[ ] ruyi 版本获取
-[ ] ruyi-mugen 测试版本更改
-[ ] 测试调度
-[ ] 自动重测
-[ ] 报告汇总
++ [x] Jenkins 配置
++ [ ] ruyi 版本获取
++ [ ] ruyi-mugen 测试版本更改
++ [ ] 测试调度
++ [ ] 自动重测
++ [ ] 报告汇总
