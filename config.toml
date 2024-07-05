@@ -7,5 +7,5 @@ github_token = ""
 issue_to = "weilinfox/ruyi-reimu"
 
 [ruyi_repo]
-repo = "https://gitee.com/ruyisdk/packages-index/"
+repo = "https://github.com/ruyisdk/packages-index/"
 branch = "main"
