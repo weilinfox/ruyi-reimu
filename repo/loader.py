@@ -37,7 +37,7 @@ class RepoBoardImage:
                     multi = False
                     break
             if multi:
-                image_type = "_MILTI"
+                image_type = "_MULTI"
                 if host == "github.com":
                     image_type = "GITHUB" + image_type
                 else:
@@ -47,7 +47,7 @@ class RepoBoardImage:
 
         board_image["image_type"] = image_type
 
-        if image_type in ["GITHUB_SINGLE", "GITHUB_MILTI"]:
+        if image_type in ["GITHUB_SINGLE", "GITHUB_MULTI"]:
             cls = RepoGithubImage
         elif image_type in ["MIRROR_SINGLE", "MIRROR_MULTI"]:
             cls = RepoMirrorImage
