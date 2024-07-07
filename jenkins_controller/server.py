@@ -56,16 +56,40 @@ class JenkinsServer:
             for a in reimu_config.youmu_jenkins["agent_"+c]:
                 labels = []
                 nodes.append(a["name"])
-                for lb in self.server.get_node_info(a["name"])["assignedLabels"]:
+                info = self.server.get_node_info(a["name"])
+                for lb in info["assignedLabels"]:
                     labels.append(lb["name"])
                 self.nodes[a["name"]] = {"type": a["type"],
                                          "labels": labels,
-                                         "cloud": c}
+                                         "cloud": c,
+                                         "offline": info["offline"],
+                                         "launchSupported": info["launchSupported"],
+                                         "temporarilyOffline": info["temporarilyOffline"]}
             capa = int(reimu_config.youmu_jenkins["cfg_" + c]["capacity"])
             if capa == 0:
                 capa = len(nodes)
             self.clouds[c] = {"capacity": capa,
                               "nodes": nodes}
+
+        logger.info("Jenkins server info load done.\n\n")
+
+        self._check()
+
+    def _check(self):
+        nodes = self.server.get_nodes()
+        for n in nodes:
+            if n["name"] in self.nodes:
+                pass
+            logger.warn("Node \"{}\"({}) exists but not available in this configuration"
+                        .format(n["name"], "offline" if n["offline"] else "online"))
+
+        for n in self.nodes:
+            if n["offline"] and not n["launchSupported"]:
+                logger.warn("Node \"{}\" is offline but cannot be automatically launched"
+                            .format(n["name"]))
+            if n["temporarilyOffline"]:
+                logger.warn("Node \"{}\"({}) was temporarily marked offline and unavaiable"
+                            .format(a["name"], "offline" if n["offline"] else "online"))
 
         logger.info("Jenkins server check done.\n\n")
 
