@@ -302,6 +302,8 @@ class JenkinsServer:
 
         node_ele = ElementTree.Element("assignedNode")
         node_ele.text = labels
+        roam_ele = ElementTree.Element("canRoam")
+        roam_ele.text = "false"
 
         for e in et.findall("publishers"):
             et.remove(e)
@@ -309,9 +311,12 @@ class JenkinsServer:
             et.remove(e)
         for e in et.findall("assignedNode"):
             et.remove(e)
+        for e in et.findall("canRoam"):
+            et.remove(e)
         et.append(builders_ele)
         et.append(publishers_ele)
         et.append(node_ele)
+        et.append(roam_ele)
 
         return ElementTree.tostring(et).decode('utf-8')
 
