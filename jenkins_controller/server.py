@@ -6,6 +6,8 @@ from config.loader import reimu_config
 from utils.errors import AssertException
 from utils.logger import logger
 
+from .script import ScriptGenerator
+
 
 class JenkinsServer:
     FOLDER_NAME = "ruyi-reimu-mugen-auto-test"
@@ -22,6 +24,12 @@ class JenkinsServer:
         self.clouds = {}
         self.nodes = {}
         self.test_platforms = {}
+
+        self.queued_platforms = []
+        self.testing_platforms = []
+        self.testing_platforms_info = []
+        self.testing_nodes = []
+        self.tested_platforms = []
 
     def load(self):
         if not reimu_config.ready():
@@ -49,6 +57,7 @@ class JenkinsServer:
         if not isinstance(test, dict):
             raise AssertException("jenkins.test_platforms not a dist type")
         for p in test.items():
+            # test platforms data
             self.test_platforms[p[0]] = {"labels": p[1]}
 
         for c in clouds:
@@ -59,37 +68,115 @@ class JenkinsServer:
                 info = self.server.get_node_info(a["name"])
                 for lb in info["assignedLabels"]:
                     labels.append(lb["name"])
+                # nodes data
                 self.nodes[a["name"]] = {"type": a["type"],
                                          "labels": labels,
                                          "cloud": c,
                                          "offline": info["offline"],
                                          "launchSupported": info["launchSupported"],
-                                         "temporarilyOffline": info["temporarilyOffline"]}
+                                         "temporarilyOffline": info["temporarilyOffline"],
+                                         "available": True,
+                                         "testing": False}
             capa = int(reimu_config.youmu_jenkins["cfg_" + c]["capacity"])
             if capa == 0:
                 capa = len(nodes)
+            # clouds data
             self.clouds[c] = {"capacity": capa,
+                              "testing": 0,
                               "nodes": nodes}
 
         logger.info("Jenkins server info load done.\n\n")
 
         self._check()
 
+    def test(self):
+        for p in self.test_platforms:
+            self.queued_platforms.append(p)
+
+        while self.queued_platforms or self.testing_platforms:
+            # check testing queue
+            end_queue = []
+            for i in range(0, len(self.testing_platforms)):
+                end, info = self._jenkins_job_end(self.testing_platforms[i], self.testing_platforms_info[i]["number"])
+                if end:
+                    end_queue.append(i)
+                    logger.info('Platform {} test finished, status "{}"'
+                                .format(self.testing_platforms[i], info["result"]))
+            for i in range(0, len(end_queue)):
+                self.tested_platforms.append(self.testing_platforms[end_queue[i] - i])
+                self.nodes[self.testing_nodes[end_queue[i] - i]]["testing"] = False
+                self.clouds[self.nodes[self.testing_nodes[end_queue[i] - i]]["cloud"]]["testing"] -= 1
+
+                self.testing_nodes.pop(end_queue[i] - i)
+                self.testing_platforms.pop(end_queue[i] - i)
+                self.testing_platforms_info.pop(end_queue[i] - i)
+            if self.testing_platforms and not end_queue:
+                logger.info("No platform test finished")
+
+            # find new platform to test
+            wait_queue = []
+            wait_node = []
+            for p in self.queued_platforms:
+                pl = self.test_platforms[p]["labels"]
+                for n in self.nodes.items():
+                    if n[1]["testing"]:
+                        continue
+                    if self.clouds[n[1]["cloud"]]["capacity"] <= self.clouds[n[1]["cloud"]]["testing"]:
+                        continue
+                    flag = True
+                    nl = n[1]["labels"]
+                    for l in pl:
+                        if l not in nl:
+                            flag = False
+                            break
+                    if flag:
+                        wait_queue.append(p)
+                        wait_node.append(n[0])
+                        n[1]["testing"] = True
+                        self.clouds[n[1]["cloud"]]["testing"] += 1
+                        break
+            if self.queued_platforms and not wait_queue:
+                logger.info("{} platforms still in queue".format(len(self.queued_platforms)))
+
+            # start test
+            for i in range(0, len(wait_queue)):
+                script_gen = ScriptGenerator("mugen", self.nodes[wait_node[i]]["type"],
+                                             {"sudo": True, "test_platform": wait_queue[i]})
+
+                logger.info('Start test on platform {}'.format(wait_queue[i]))
+
+                self._jenkins_job_create(wait_queue[i], wait_node[i], script_gen.get_script(),
+                                         script_gen.get_artifacts())
+                info = self._jenkins_job_start(wait_queue[i])
+
+                self.queued_platforms.remove(wait_queue[i])
+                self.testing_platforms.append(wait_queue[i])
+                self.testing_nodes.append(wait_node[i])
+                self.testing_platforms_info.append(info)
+
+                logger.info('Platform {} is testing, check url {}'.format(wait_queue[i], info["url"]))
+
+            # sleep 10s
+            time.sleep(10)
+
+        logger.info("Jenkins test done.\n\n")
+
     def _check(self):
         nodes = self.server.get_nodes()
         for n in nodes:
             if n["name"] in self.nodes:
-                pass
+                continue
             logger.warn("Node \"{}\"({}) exists but not available in this configuration"
                         .format(n["name"], "offline" if n["offline"] else "online"))
 
-        for n in self.nodes:
-            if n["offline"] and not n["launchSupported"]:
-                logger.warn("Node \"{}\" is offline but cannot be automatically launched"
-                            .format(n["name"]))
-            if n["temporarilyOffline"]:
+        for n in self.nodes.items():
+            if n[1]["offline"] and not n[1]["launchSupported"]:
+                logger.warn("Node \"{}\" is offline but cannot be automatically launched".format(n[0]))
+                n[1]["available"] = False
+            if n[1]["temporarilyOffline"]:
                 logger.warn("Node \"{}\"({}) was temporarily marked offline and unavaiable"
-                            .format(a["name"], "offline" if n["offline"] else "online"))
+                            .format(n[0], "offline" if n[1]["offline"] else "online"))
+                n[1]["available"] = False
 
         logger.info("Jenkins server check done.\n\n")
 
@@ -131,7 +218,7 @@ class JenkinsServer:
         else:
             logger.info("Use existing jenkins job folder {}".format(job_name))
 
-    def _jenkins_job_create(self, job_name: str, labels="", cmd="", artifacts=""):
+    def _jenkins_job_create(self, job_name: str, labels: str, cmd: str, artifacts: str):
         """
         Create job in folder
         """
@@ -149,6 +236,30 @@ class JenkinsServer:
         else:
             logger.info("Reconfigure existing jenkins job {}".format(job_name))
             self.server.reconfig_job(job_name, JenkinsServer._jenkins_job_gen_xml(labels, cmd, artifacts))
+
+    def _jenkins_job_start(self, job_name: str) -> dict:
+        self._new_server()
+
+        job_name = "{}/{}".format(JenkinsServer.FOLDER_NAME, job_name)
+        bid = self.server.build_job(job_name)
+
+        while True:
+            info = self.server.get_queue_item(bid)
+            if "executable" in info:
+                return {"number": info["executable"]["number"], "url": info["executable"]["url"]}
+            time.sleep(1)
+
+    def _jenkins_job_end(self, job_name: str, number: int) -> (bool, dict):
+        self._new_server()
+
+        job_name = "{}/{}".format(JenkinsServer.FOLDER_NAME, job_name)
+
+        info = self.server.get_build_info(job_name, number)
+
+        if info["inProgress"]:
+            return False, {}
+
+        return True, {"inProgress": info["inProgress"], "result": info["result"]}
 
     @staticmethod
     def _jenkins_job_gen_xml(labels: str, cmd: str, artifacts: str) -> str:
@@ -191,6 +302,8 @@ class JenkinsServer:
 
         node_ele = ElementTree.Element("assignedNode")
         node_ele.text = labels
+        roam_ele = ElementTree.Element("canRoam")
+        roam_ele.text = "false"
 
         for e in et.findall("publishers"):
             et.remove(e)
@@ -198,9 +311,12 @@ class JenkinsServer:
             et.remove(e)
         for e in et.findall("assignedNode"):
             et.remove(e)
+        for e in et.findall("canRoam"):
+            et.remove(e)
         et.append(builders_ele)
         et.append(publishers_ele)
         et.append(node_ele)
+        et.append(roam_ele)
 
         return ElementTree.tostring(et).decode('utf-8')
 
