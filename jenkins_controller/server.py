@@ -245,7 +245,8 @@ class JenkinsServer:
 
         while True:
             info = self.server.get_queue_item(bid)
-            if info and "executable" in info and "number" in info["executable"] and "url" in info["executable"]:
+            if (info and "executable" in info
+                    and info["executable"] and "number" in info["executable"] and "url" in info["executable"]):
                 return {"number": info["executable"]["number"], "url": info["executable"]["url"]}
             time.sleep(1)
 
