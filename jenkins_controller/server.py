@@ -119,6 +119,8 @@ class JenkinsServer:
             for p in self.queued_platforms:
                 pl = self.test_platforms[p]["labels"]
                 for n in self.nodes.items():
+                    if not n[1]["available"]:
+                        continue
                     if n[1]["testing"]:
                         continue
                     if self.clouds[n[1]["cloud"]]["capacity"] <= self.clouds[n[1]["cloud"]]["testing"]:
@@ -245,7 +247,8 @@ class JenkinsServer:
 
         while True:
             info = self.server.get_queue_item(bid)
-            if "executable" in info:
+            if (info and "executable" in info
+                    and info["executable"] and "number" in info["executable"] and "url" in info["executable"]):
                 return {"number": info["executable"]["number"], "url": info["executable"]["url"]}
             time.sleep(1)
 

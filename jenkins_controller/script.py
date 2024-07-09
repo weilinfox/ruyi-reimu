@@ -69,7 +69,7 @@ class ScriptGenerator:
         cmds = ""
         for c in self.cmds:
             cmds += c + "\n"
-        return cmds.format("sudo" if self.sudo else "", self.distro_type)
+        return cmds.format("sudo" if self.sudo else "", self.test_platform)
 
     def get_artifacts(self) -> str:
         if self.gen_type != "mugen":
