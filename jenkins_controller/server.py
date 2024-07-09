@@ -119,6 +119,8 @@ class JenkinsServer:
             for p in self.queued_platforms:
                 pl = self.test_platforms[p]["labels"]
                 for n in self.nodes.items():
+                    if not n[1]["available"]:
+                        continue
                     if n[1]["testing"]:
                         continue
                     if self.clouds[n[1]["cloud"]]["capacity"] <= self.clouds[n[1]["cloud"]]["testing"]:
