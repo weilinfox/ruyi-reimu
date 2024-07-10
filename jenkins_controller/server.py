@@ -96,14 +96,22 @@ class JenkinsServer:
         while self.queued_platforms or self.testing_platforms:
             # check testing queue
             end_queue = []
+            end_status = []
             for i in range(0, len(self.testing_platforms)):
                 end, info = self._jenkins_job_end(self.testing_platforms[i], self.testing_platforms_info[i]["number"])
                 if end:
                     end_queue.append(i)
+                    end_status.append(info["result"] == "SUCCESS")
                     logger.info('Platform {} test finished, status "{}"'
                                 .format(self.testing_platforms[i], info["result"]))
+
             for i in range(0, len(end_queue)):
-                self.tested_platforms.append(self.testing_platforms[end_queue[i] - i])
+                if end_status[i]:
+                    self.tested_platforms.append(self.testing_platforms[end_queue[i] - i])
+                else:
+                    self.queued_platforms.append(self.testing_platforms[end_queue[i] - i])
+                    logger.info('Platform {} test failed, will retest'.format(self.testing_platforms[end_queue[i] - i]))
+
                 self.nodes[self.testing_nodes[end_queue[i] - i]]["testing"] = False
                 self.clouds[self.nodes[self.testing_nodes[end_queue[i] - i]]["cloud"]]["testing"] -= 1
 
