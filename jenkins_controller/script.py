@@ -35,6 +35,7 @@ class ScriptGenerator:
 
     def _gen_mugen_test_cmds(self):
         self._gen_upgrade_cmds()
+        self._gen_clean_cmds()
 
         self.cmds.append(ScriptGenerator.CMD_MUGEN_DEP_INSTALL[self.distro_type])
 
@@ -64,6 +65,9 @@ class ScriptGenerator:
 
     def _gen_upgrade_cmds(self):
         self.cmds.append(ScriptGenerator.CMD_UPGRADE[self.distro_type])
+
+    def _gen_clean_cmds(self):
+        self.cmds.append("{0} rm -rf ./* ./.*")
 
     def get_script(self) -> str:
         cmds = ""

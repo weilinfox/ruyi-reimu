@@ -93,24 +93,46 @@ class JenkinsServer:
         for p in self.test_platforms:
             self.queued_platforms.append(p)
 
+        log_delay = 0
+        retest_info = {}
+
         while self.queued_platforms or self.testing_platforms:
             # check testing queue
             end_queue = []
+            end_status = []
             for i in range(0, len(self.testing_platforms)):
                 end, info = self._jenkins_job_end(self.testing_platforms[i], self.testing_platforms_info[i]["number"])
                 if end:
                     end_queue.append(i)
+                    end_status.append(info["result"] == "SUCCESS")
                     logger.info('Platform {} test finished, status "{}"'
                                 .format(self.testing_platforms[i], info["result"]))
+
             for i in range(0, len(end_queue)):
-                self.tested_platforms.append(self.testing_platforms[end_queue[i] - i])
+                if end_status[i]:
+                    self.tested_platforms.append(self.testing_platforms[end_queue[i] - i])
+                else:
+                    # retest
+                    if self.testing_platforms[end_queue[i] - i] in retest_info:
+                        retest_info[self.testing_platforms[end_queue[i] - i]]["count"] += 1
+                    else:
+                        retest_info[self.testing_platforms[end_queue[i] - i]] = {"count": 1}
+                    if retest_info[self.testing_platforms[end_queue[i] - i]]["count"] > 3:
+                        retest_info[self.testing_platforms[end_queue[i] - i]]["count"] -= 1
+                        logger.info('Platform {} test failed 3 times, will not retest'
+                                    .format(self.testing_platforms[end_queue[i] - i]))
+                    else:
+                        self.queued_platforms.append(self.testing_platforms[end_queue[i] - i])
+                        logger.info('Platform {} test failed, will retest'
+                                    .format(self.testing_platforms[end_queue[i] - i]))
+
                 self.nodes[self.testing_nodes[end_queue[i] - i]]["testing"] = False
                 self.clouds[self.nodes[self.testing_nodes[end_queue[i] - i]]["cloud"]]["testing"] -= 1
 
                 self.testing_nodes.pop(end_queue[i] - i)
                 self.testing_platforms.pop(end_queue[i] - i)
                 self.testing_platforms_info.pop(end_queue[i] - i)
-            if self.testing_platforms and not end_queue:
+            if self.testing_platforms and not end_queue and not log_delay:
                 logger.info("No platform test finished")
 
             # find new platform to test
@@ -137,7 +159,7 @@ class JenkinsServer:
                         n[1]["testing"] = True
                         self.clouds[n[1]["cloud"]]["testing"] += 1
                         break
-            if self.queued_platforms and not wait_queue:
+            if self.queued_platforms and not wait_queue and not log_delay:
                 logger.info("{} platforms still in queue".format(len(self.queued_platforms)))
 
             # start test
@@ -159,7 +181,11 @@ class JenkinsServer:
                 logger.info('Platform {} is testing, check url {}'.format(wait_queue[i], info["url"]))
 
             # sleep 10s
-            time.sleep(10)
+            sleep_time = 10
+            time.sleep(sleep_time)
+            log_delay -= 1
+            if log_delay < 0:
+                log_delay = int(15 * 60 / sleep_time)
 
         logger.info("Jenkins test done.\n\n")
 
