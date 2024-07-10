@@ -93,6 +93,8 @@ class JenkinsServer:
         for p in self.test_platforms:
             self.queued_platforms.append(p)
 
+        retest_info = {}
+
         while self.queued_platforms or self.testing_platforms:
             # check testing queue
             end_queue = []
@@ -109,8 +111,19 @@ class JenkinsServer:
                 if end_status[i]:
                     self.tested_platforms.append(self.testing_platforms[end_queue[i] - i])
                 else:
-                    self.queued_platforms.append(self.testing_platforms[end_queue[i] - i])
-                    logger.info('Platform {} test failed, will retest'.format(self.testing_platforms[end_queue[i] - i]))
+                    # retest
+                    if self.testing_platforms[end_queue[i] - i] in retest_info:
+                        retest_info[self.testing_platforms[end_queue[i] - i]]["count"] += 1
+                    else:
+                        retest_info[self.testing_platforms[end_queue[i] - i]] = {"count": 1}
+                    if retest_info[self.testing_platforms[end_queue[i] - i]]["count"] > 3:
+                        retest_info[self.testing_platforms[end_queue[i] - i]]["count"] -= 1
+                        logger.info('Platform {} test failed 3 times, will not retest'
+                                    .format(self.testing_platforms[end_queue[i] - i]))
+                    else:
+                        self.queued_platforms.append(self.testing_platforms[end_queue[i] - i])
+                        logger.info('Platform {} test failed, will retest'
+                                    .format(self.testing_platforms[end_queue[i] - i]))
 
                 self.nodes[self.testing_nodes[end_queue[i] - i]]["testing"] = False
                 self.clouds[self.nodes[self.testing_nodes[end_queue[i] - i]]["cloud"]]["testing"] -= 1
