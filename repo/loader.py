@@ -366,6 +366,10 @@ class Repo:
                  .format(info["upstream_repo"], info["latest_version"], info["latest_url"]))
         body += ("\n+ The current version in ruyi upstream is {}".format(info["current_version"]))
 
+        packidx = ("{}/tree/{}/manifests/board-image/{}"
+                   .format(reimu_config.ruyi_repo, reimu_config.ruyi_repo_branch, board_image.title))
+        body += ("\n+ The packages-index info is [{}]({})".format(packidx, packidx))
+
         # if len(missing_files):
         #    logger.warn("In board image {}, following files not found in upstream releases {}"
         #                .format(self.title, str(missing_files)))
