@@ -101,19 +101,22 @@ class RepoGithubImage(RepoBoardImage):
         latest_version = ""
         ruyi_version = ""
 
-        for u in upstream_releases:
+        # 使用字符串进行版本排序
+        sorted_releases = sorted(upstream_releases, key=lambda x: x.tag_name, reverse=True)
+
+        for u in sorted_releases:
             # get latest version
             # versions are sort in time,
             # but we cannot sort these version code
             # they could in invalid version format
             # todo: 版本排序
             if latest_version == "":
-                latest_version = u.title
+                latest_version = u.tag_name  # 使用 tag 进行版本比较
 
             # check assets
             # todo: 更好的版本匹配
             for v in version_list.keys():
-                if v == u.title:
+                if v == u.tag_name:  # 直接使用字符串进行版本比较
                     ruyi_version = v
                     break
 
@@ -122,7 +125,7 @@ class RepoGithubImage(RepoBoardImage):
 
         return {"update": latest_version == ruyi_version,
                 "latest_version": latest_version,
-                "latest_url": "https://github.com/" + self.upstream_repo + "/releases/" + latest_version,
+                "latest_url": "https://github.com/" + self.upstream_repo + "/releases/tag/" + latest_version,
                 "current_version": ruyi_version,
                 "upstream_repo": "https://github.com/" + self.upstream_repo}
 
@@ -356,10 +359,12 @@ class Repo:
         title = "[ruyi-reimu] Board image {} need update".format(board_image.title)
         body = "## Description\n"
 
+
         # send issue
-        logger.warn("In board image {}, the latest version is {}".format(board_image.title, info["latest_version"]))
+        logger.info("Info about the latest {}".format(info))
         body += ("\n+ In upstream repo <{}>, the latest version is [{}]({})"
                  .format(info["upstream_repo"], info["latest_version"], info["latest_url"]))
+        body += ("\n+ The current version in ruyi upstream is {}".format(info["current_version"]))
 
         # if len(missing_files):
         #    logger.warn("In board image {}, following files not found in upstream releases {}"
