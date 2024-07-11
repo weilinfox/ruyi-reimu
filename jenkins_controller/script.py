@@ -67,7 +67,7 @@ class ScriptGenerator:
         self.cmds.append(ScriptGenerator.CMD_UPGRADE[self.distro_type])
 
     def _gen_clean_cmds(self):
-        self.cmds.append("{0} rm -rf ./* ./.*")
+        self.cmds.append("{0} rm -rf ./* ./.* || true")
 
     def get_script(self) -> str:
         cmds = ""
