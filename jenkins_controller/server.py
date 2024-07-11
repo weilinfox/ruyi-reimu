@@ -185,6 +185,7 @@ class JenkinsServer:
             time.sleep(sleep_time)
             log_delay -= 1
             if log_delay < 0:
+                # 15m
                 log_delay = int(15 * 60 / sleep_time)
 
         logger.info("Jenkins test done.\n\n")
