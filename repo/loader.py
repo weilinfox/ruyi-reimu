@@ -101,10 +101,7 @@ class RepoGithubImage(RepoBoardImage):
         latest_version = ""
         ruyi_version = ""
 
-        # 使用字符串进行版本排序
-        sorted_releases = sorted(upstream_releases, key=lambda x: x.tag_name, reverse=True)
-
-        for u in sorted_releases:
+        for u in upstream_releases:
             # get latest version
             # versions are sort in time,
             # but we cannot sort these version code
