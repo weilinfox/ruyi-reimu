@@ -122,7 +122,7 @@ class RepoGithubImage(RepoBoardImage):
 
         return {"update": latest_version == ruyi_version,
                 "latest_version": latest_version,
-                "latest_url": "https://github.com/" + self.upstream_repo + "/releases/tag/" + latest_version,
+                "latest_url": "https://github.com/" + self.upstream_repo + "/releases/" + latest_version,
                 "current_version": ruyi_version,
                 "upstream_repo": "https://github.com/" + self.upstream_repo}
 
