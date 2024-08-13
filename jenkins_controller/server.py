@@ -23,12 +23,17 @@ class JenkinsServer:
 
         self.clouds = {}
         self.nodes = {}
+        # platforms reimu should test
         self.test_platforms = {}
-
+        # platforms waiting in queue
         self.queued_platforms = []
+        # job configured and build operation sent
+        self.configured_platforms = []
+        # testing
         self.testing_platforms = []
         self.testing_platforms_info = []
         self.testing_nodes = []
+        # tested
         self.tested_platforms = []
 
     def load(self):
@@ -162,23 +167,32 @@ class JenkinsServer:
             if self.queued_platforms and not wait_queue and not log_delay:
                 logger.info("{} platforms stuck in queue".format(len(self.queued_platforms)))
 
-            # start test
+            # configure job and send build operation
             for i in range(0, len(wait_queue)):
                 script_gen = ScriptGenerator("mugen", self.nodes[wait_node[i]]["type"],
                                              {"sudo": True, "test_platform": wait_queue[i]})
 
-                logger.info('Start test on platform {}'.format(wait_queue[i]))
+                logger.info('Configure job for platform {}'.format(wait_queue[i]))
 
                 self._jenkins_job_create(wait_queue[i], wait_node[i], script_gen.get_script(),
                                          script_gen.get_artifacts())
-                info = self._jenkins_job_start(wait_queue[i])
+                bid = self._jenkins_job_build(wait_queue[i])
 
+                self.configured_platforms.append((wait_queue[i], wait_node[i], bid))
                 self.queued_platforms.remove(wait_queue[i])
-                self.testing_platforms.append(wait_queue[i])
-                self.testing_nodes.append(wait_node[i])
-                self.testing_platforms_info.append(info)
 
-                logger.info('Platform {} is testing, check url {}'.format(wait_queue[i], info["url"]))
+            # check build started
+            testing_queue = []
+            for p in self.configured_platforms:
+                info = self._jenkins_job_check_started(p[2])
+                if info:
+                    testing_queue.append((p, info))
+            for t in testing_queue:
+                self.configured_platforms.remove(t[0])
+                self.testing_platforms.append(t[0][0])
+                self.testing_nodes.append(t[0][1])
+                self.testing_platforms_info.append(t[1])
+                logger.info('Platform {} is testing, check url {}'.format(t[0][0], t[1]["url"]))
 
             # sleep 10s
             sleep_time = 10
@@ -266,18 +280,20 @@ class JenkinsServer:
             logger.info("Reconfigure existing jenkins job {}".format(job_name))
             self.server.reconfig_job(job_name, JenkinsServer._jenkins_job_gen_xml(labels, cmd, artifacts))
 
-    def _jenkins_job_start(self, job_name: str) -> dict:
+    def _jenkins_job_build(self, job_name: str) -> int:
         self._new_server()
 
         job_name = "{}/{}".format(JenkinsServer.FOLDER_NAME, job_name)
-        bid = self.server.build_job(job_name)
+        return self.server.build_job(job_name)
 
-        while True:
-            info = self.server.get_queue_item(bid)
-            if (info and "executable" in info
-                    and info["executable"] and "number" in info["executable"] and "url" in info["executable"]):
-                return {"number": info["executable"]["number"], "url": info["executable"]["url"]}
-            time.sleep(1)
+    def _jenkins_job_check_started(self, bid: int) -> dict:
+        self._new_server()
+
+        info = self.server.get_queue_item(bid)
+        if (info and "executable" in info
+                and info["executable"] and "number" in info["executable"] and "url" in info["executable"]):
+            return {"number": info["executable"]["number"], "url": info["executable"]["url"]}
+        return {}
 
     def _jenkins_job_end(self, job_name: str, number: int) -> (bool, dict):
         self._new_server()
