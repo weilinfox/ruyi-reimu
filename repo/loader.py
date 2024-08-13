@@ -57,7 +57,7 @@ class RepoBoardImage:
 
         return object.__new__(cls)
 
-    def __init__(self, title:str, board_image: dict):
+    def __init__(self, title: str, board_image: dict):
         """
         :param board_image: {"files": list[ImageUrl], "image_type": None}
         """

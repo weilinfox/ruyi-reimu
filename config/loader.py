@@ -62,6 +62,12 @@ class Config:
 
         return fp
 
+    def read_cache_status(self, version="") -> dict:
+        fp = self.check_cache_status(version)
+        if fp.exists():
+            return auto_load(fp)
+        return {}
+
     @staticmethod
     def check_mirror_file() -> Path:
         return Config.check_config_file(Config.mirror_file)
@@ -73,6 +79,11 @@ class Config:
     @staticmethod
     def check_jenkins_file() -> Path:
         return Config.check_config_file(Config.jenkins_file)
+
+    def cache_store(self, status=None):
+        auto_store(self.check_cache_status(), self.reimu_status)
+        if status is not None:
+            auto_store(self.check_cache_status(self.reimu_status["version"]), status)
 
     def load(self, config_file="", mirror_file="", jenkins_file=""):
         self.config_file = self.check_configuration_file() if config_file == "" else Path(config_file)
@@ -128,7 +139,7 @@ class Config:
         if cache_status.exists():
             self.reimu_status = auto_load(cache_status)
         else:
-            auto_store(cache_status, self.reimu_status)
+            self.cache_store()
 
         # check tmpdir exists
         if self.tmpdir.exists():

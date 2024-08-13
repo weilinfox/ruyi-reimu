@@ -4,6 +4,7 @@ import xml.etree.ElementTree as ElementTree
 
 from config.loader import reimu_config
 from utils.errors import AssertException
+from utils.github_operation import gh_op
 from utils.logger import logger
 
 from .script import ScriptGenerator
@@ -36,6 +37,11 @@ class JenkinsServer:
         # tested
         self.tested_platforms = []
 
+        # reimu_config.reimu_status
+        self.ruyi_version = ""
+        self.ruyi_test_date = ""
+        self.ruyi_testing = False
+
     def load(self):
         if not reimu_config.ready():
             raise Exception("ruyi-reimu not configured")
@@ -45,6 +51,12 @@ class JenkinsServer:
         self._username = jenkins_cfg["username"]
         self._password = jenkins_cfg["password"]
 
+        # ruyi version
+        self.ruyi_version = reimu_config.reimu_status["version"]
+        self.ruyi_test_date = reimu_config.reimu_status["date"]
+        self.ruyi_testing = reimu_config.reimu_status["testing"]
+
+        # jenkins check
         self._new_server()
 
         self.user = self.server.get_whoami()["fullName"]
@@ -80,21 +92,74 @@ class JenkinsServer:
                                          "offline": info["offline"],
                                          "launchSupported": info["launchSupported"],
                                          "temporarilyOffline": info["temporarilyOffline"],
-                                         "available": True,
-                                         "testing": False}
+                                         "available": True,  # Will resign by _check(), available for reimu or not
+                                         "testing": False}   # If this node in use by reimu
             capa = int(reimu_config.youmu_jenkins["cfg_" + c]["capacity"])
             if capa == 0:
                 capa = len(nodes)
             # clouds data
             self.clouds[c] = {"capacity": capa,
-                              "testing": 0,
-                              "nodes": nodes}
+                              "testing": 0,    # Now many nodes are in use by reimu
+                              "nodes": nodes}  # Node list under this cloud
 
         logger.info("Jenkins server info load done.\n\n")
 
         self._check()
 
+        # Restore status
+        if self.ruyi_testing:
+            ruyi_status = reimu_config.read_cache_status(self.ruyi_version)
+            if not ruyi_status:
+                self.ruyi_testing = False
+            else:
+                self.test_platforms = ruyi_status["test_platforms"]
+                self.queued_platforms = ruyi_status["queued_platforms"]
+                self.configured_platforms = ruyi_status["configured_platforms"]
+                self.testing_platforms = ruyi_status["testing_platforms"]
+                self.testing_platforms_info = ruyi_status["testing_platforms_info"]
+                self.testing_nodes = ruyi_status["testing_nodes"]
+                self.tested_platforms = ruyi_status["tested_platforms"]
+
+                for c in ruyi_status["clouds_testing"].items():
+                    self.clouds[c[0]]["testing"] = c[1]
+                for n in ruyi_status["nodes_testing"].items():
+                    self.nodes[n[0]]["testing"] = n[1]
+
+        # New test
+        if self.ruyi_testing:
+            release = gh_op.get_repo_latest_release("ruyisdk/ruyi")
+            tag = release.tag_name
+            if self.ruyi_version != tag:
+                self.ruyi_version = tag
+                shanghai = time.gmtime(time.time()+28800)
+                self.ruyi_test_date = "{}{}{}".format(shanghai.tm_year, shanghai.tm_mon, shanghai.tm_mday)
+
+    def _status_store(self):
+        reimu_config.reimu_status["version"] = self.ruyi_version
+        reimu_config.reimu_status["date"] = self.ruyi_test_date
+        reimu_config.reimu_status["testing"] = self.ruyi_testing
+
+        clouds_testing = {}
+        nodes_testing = {}
+        for i in self.clouds.items():
+            clouds_testing[i[0]] = i[1]["testing"]
+        for i in self.nodes.items():
+            nodes_testing[i[0]] = i[1]["testing"]
+        reimu_config.cache_store({
+            "test_platforms": self.test_platforms,
+            "queued_platforms": self.queued_platforms,
+            "configured_platforms": self.configured_platforms,
+            "testing_platforms": self.testing_platforms,
+            "testing_platforms_info": self.testing_platforms_info,
+            "testing_nodes": self.testing_nodes,
+            "tested_platforms": self.tested_platforms,
+            "clouds_testing": clouds_testing,
+            "nodes_testing": nodes_testing,
+        })
+
     def test(self):
+        self.ruyi_testing = True
+
         for p in self.test_platforms:
             self.queued_platforms.append(p)
 
@@ -202,6 +267,7 @@ class JenkinsServer:
                 # 15m
                 log_delay = int(15 * 60 / sleep_time)
 
+        self.ruyi_testing = False
         logger.info("Jenkins test done.\n\n")
 
     def _check(self):
