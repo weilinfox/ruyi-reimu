@@ -22,14 +22,16 @@ class GithubOperation:
         for i in repo.get_issues(state="all"):
             if i.title == title:
                 if i.state == "open":
-                    logger.info("Issue \"{}\" already opened in repo {}".format(title, repo.full_name))
+                    i.edit(body=body)
+                    logger.info(f"Issue \"{title}\" already opened and updated in repo {repo.full_name}")
                 else:
-                    i.edit(state="open")
-                    i.create_comment(body)
-                    logger.info("Issue \"{}\" was reopened with comment in repo {}".format(title, repo.full_name))
+                    i.edit(state="open", body=body)
+                    i.create_comment(f"Issue reopened with updated content: {body}")
+                    logger.info(f"Issue \"{title}\" was reopened and updated in repo {repo.full_name}")
                 return
 
-        repo.create_issue(title, body)
+        repo.create_issue(title=title, body=body)
+        logger.info(f"Issue \"{title}\" created in repo {repo.full_name}")
 
 
 gh_op = GithubOperation()
