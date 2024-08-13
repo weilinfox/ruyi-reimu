@@ -16,10 +16,11 @@ class ScriptGenerator:
                                        " sys-apps/file dev-tcltk/expect dev-vcs/git sys-process/psmisc dev-build/make"
                                        " dev-python/paramiko dev-python/six app-arch/tar app-misc/jq"}
 
-    def __init__(self, gen_type: str, distro_type: str, cfg: dict):
+    def __init__(self, gen_type: str, distro_type: str, cfg: dict, env: dict):
         self.distro_type = distro_type
         self.gen_type = gen_type
         self.cfg = cfg
+        self.env = env
         self.cmds = []
         # 默认为普通用户
         self.sudo = cfg.get("sudo", True)
@@ -36,6 +37,7 @@ class ScriptGenerator:
     def _gen_mugen_test_cmds(self):
         self._gen_upgrade_cmds()
         self._gen_clean_cmds()
+        self._gen_env_cmds()
 
         self.cmds.append(ScriptGenerator.CMD_MUGEN_DEP_INSTALL[self.distro_type])
 
@@ -65,6 +67,10 @@ class ScriptGenerator:
 
     def _gen_upgrade_cmds(self):
         self.cmds.append(ScriptGenerator.CMD_UPGRADE[self.distro_type])
+
+    def _gen_env_cmds(self):
+        for it in self.env.items():
+            self.cmds.append("export {}={}".format(it[0], it[1]))
 
     def _gen_clean_cmds(self):
         self.cmds.append("{0} rm -rf ./* ./.* || true")

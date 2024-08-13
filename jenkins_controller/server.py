@@ -238,7 +238,8 @@ class JenkinsServer:
             # configure job and send build operation
             for i in range(0, len(wait_queue)):
                 script_gen = ScriptGenerator("mugen", self.nodes[wait_node[i]]["type"],
-                                             {"sudo": True, "test_platform": wait_queue[i]})
+                                             {"sudo": True, "test_platform": wait_queue[i]},
+                                             {"ruyi_version": self.ruyi_version})
 
                 logger.info('Configure job for platform {}'.format(wait_queue[i]))
 
