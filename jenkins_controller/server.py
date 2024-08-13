@@ -139,6 +139,9 @@ class JenkinsServer:
                 self.ruyi_test_date = "{}{}{}".format(shanghai.tm_year, shanghai.tm_mon, shanghai.tm_mday)
                 self.ruyi_tested = False
 
+                for p in self.test_platforms:
+                    self.queued_platforms.append(p)
+
                 logger.info("Will now test ruyi v{}".format(self.ruyi_version))
 
     def _status_store(self):
@@ -172,9 +175,6 @@ class JenkinsServer:
 
         self.ruyi_testing = True
         self._status_store()
-
-        for p in self.test_platforms:
-            self.queued_platforms.append(p)
 
         log_delay = 0
         retest_info = {}
