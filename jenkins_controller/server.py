@@ -160,7 +160,7 @@ class JenkinsServer:
                         self.clouds[n[1]["cloud"]]["testing"] += 1
                         break
             if self.queued_platforms and not wait_queue and not log_delay:
-                logger.info("{} platforms still in queue".format(len(self.queued_platforms)))
+                logger.info("{} platforms stuck in queue".format(len(self.queued_platforms)))
 
             # start test
             for i in range(0, len(wait_queue)):

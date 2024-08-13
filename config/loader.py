@@ -3,7 +3,7 @@ import time
 from os import environ
 from pathlib import Path
 
-from utils.auto_loader import auto_load
+from utils.auto_loader import auto_load, auto_store
 from utils.errors import AssertException
 from utils.github_operation import gh_op
 from utils.logger import logger
@@ -22,13 +22,19 @@ class Config:
         self.mirror_file = Path(Config.mirror_file)
 
         self._ready = False
+
         self.github_token = ""
         self.issue_to = ""
+
         self.ruyi_repo = "https://github.com/ruyisdk/packages-index.git"
         self.ruyi_repo_branch = "main"
         self.ruyi_repo_mirrors = {}
         self.youmu_jenkins = {}
+
+        self.reimu_status = {'version': "0.0.0", "date": "19700101", "testing": False}
+
         self.tmpdir = Path("/tmp/ruyi_reimu")
+        self.cache_dir = Path('~/.cache/ruyi-reimu').expanduser()
 
     def ready(self) -> bool:
         return self._ready
@@ -41,6 +47,20 @@ class Config:
             if c.is_file():
                 return c
         return Path(name)
+
+    def check_cache_status(self, version="") -> Path:
+        fp = self.cache_dir
+        if version != "":
+            fp = fp.joinpath(version)
+            if fp.exists() and not fp.is_dir():
+                fp.unlink()
+            if not fp.exists():
+                fp.mkdir()
+        fp = fp.joinpath("status.json")
+        if fp.exists() and not fp.is_file():
+            fp.unlink()
+
+        return fp
 
     @staticmethod
     def check_mirror_file() -> Path:
@@ -98,6 +118,17 @@ class Config:
             if "https_proxy" in sis.keys():
                 self.https_proxy = sis["https_proxy"]
                 environ["https_proxy"] = sis["https_proxy"]
+
+        # check cache dir
+        if self.cache_dir.exists() and not self.cache_dir.is_dir():
+            self.cache_dir.rename(str(self.cache_dir) + "_" + str(time.time_ns()) + ".old")
+        if not self.cache_dir.exists():
+            self.tmpdir.mkdir()
+        cache_status = self.check_cache_status()
+        if cache_status.exists():
+            self.reimu_status = auto_load(cache_status)
+        else:
+            auto_store(cache_status, self.reimu_status)
 
         # check tmpdir exists
         if self.tmpdir.exists():
