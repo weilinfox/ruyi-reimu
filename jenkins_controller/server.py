@@ -130,7 +130,7 @@ class JenkinsServer:
                 logger.info("Test status for ruyi v{} load from cache".format(self.ruyi_version))
 
         # New test
-        if self.ruyi_testing:
+        if not self.ruyi_testing:
             release = gh_op.get_repo_latest_release("ruyisdk/ruyi")
             tag = release.tag_name
             if self.ruyi_version != tag:
