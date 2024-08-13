@@ -134,7 +134,7 @@ class Config:
         if self.cache_dir.exists() and not self.cache_dir.is_dir():
             self.cache_dir.rename(str(self.cache_dir) + "_" + str(time.time_ns()) + ".old")
         if not self.cache_dir.exists():
-            self.tmpdir.mkdir()
+            self.cache_dir.mkdir()
         cache_status = self.check_cache_status()
         if cache_status.exists():
             self.reimu_status = auto_load(cache_status)

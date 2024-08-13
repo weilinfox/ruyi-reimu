@@ -55,7 +55,8 @@ ruyi 上游版本跟踪和自动化测试调度和报告汇总。
 + [x] ruyi 版本获取
 + [x] ruyi-mugen 测试版本更改
 + [x] 测试调度
-+ [ ] 自动重测
++ [x] 自动重测
++ [ ] 用例重测
 + [ ] 报告汇总
 
 注意 jenkins.toml 中 test_platforms 字段的测试平台名称应当与 ruyi-mugen 对应，该名称将被传递给 ruyi-mugen 的脚本。
