@@ -62,6 +62,6 @@ ruyi 上游版本跟踪和自动化测试调度和报告汇总。
 
 手动测试
 
-```
-python3 ./reimu_mugen_test.py 2>&1 | tee reimu_mugen_test.log
+```bash
+./reimu_mugen_test.sh
 ```
