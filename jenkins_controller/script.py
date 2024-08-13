@@ -2,7 +2,8 @@ from utils.errors import AssertException
 
 
 class ScriptGenerator:
-    CMD_UPGRADE = {"debian": "{0} apt-get update && {0} apt-get upgrade -y",
+    CMD_UPGRADE = {"debian": "{0} apt-get update && {0} apt-get upgrade -y"
+                             " -o Dpkg::Options::=\"--force-confdef\" -o Dpkg::Options::=\"--force-confold\"",
                    "fedora": "{0} dnf upgrade -y",
                    "archlinux": "{0} pacman --noconfirm -Syuu",
                    "gentoo": "{0} emerge-webrsync"}
@@ -27,7 +28,6 @@ class ScriptGenerator:
 
         if gen_type == "mugen":
             self.test_platform = cfg["test_platform"]
-            self._gen_upgrade_cmds()
             self._gen_mugen_test_cmds()
         elif gen_type == "upgrade":
             self._gen_upgrade_cmds()
