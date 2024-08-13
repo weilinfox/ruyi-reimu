@@ -41,6 +41,7 @@ class JenkinsServer:
         self.ruyi_version = ""
         self.ruyi_test_date = ""
         self.ruyi_testing = False
+        self.ruyi_tested = False
 
     def load(self):
         if not reimu_config.ready():
@@ -55,6 +56,7 @@ class JenkinsServer:
         self.ruyi_version = reimu_config.reimu_status["version"]
         self.ruyi_test_date = reimu_config.reimu_status["date"]
         self.ruyi_testing = reimu_config.reimu_status["testing"]
+        self.ruyi_tested = reimu_config.reimu_status["tested"]
 
         # jenkins check
         self._new_server()
@@ -125,6 +127,8 @@ class JenkinsServer:
                 for n in ruyi_status["nodes_testing"].items():
                     self.nodes[n[0]]["testing"] = n[1]
 
+                logger.info("Test status for ruyi v{} load from cache".format(self.ruyi_version))
+
         # New test
         if self.ruyi_testing:
             release = gh_op.get_repo_latest_release("ruyisdk/ruyi")
@@ -133,11 +137,15 @@ class JenkinsServer:
                 self.ruyi_version = tag
                 shanghai = time.gmtime(time.time()+28800)
                 self.ruyi_test_date = "{}{}{}".format(shanghai.tm_year, shanghai.tm_mon, shanghai.tm_mday)
+                self.ruyi_tested = False
+
+                logger.info("Will now test ruyi v{}".format(self.ruyi_version))
 
     def _status_store(self):
         reimu_config.reimu_status["version"] = self.ruyi_version
         reimu_config.reimu_status["date"] = self.ruyi_test_date
         reimu_config.reimu_status["testing"] = self.ruyi_testing
+        reimu_config.reimu_status["tested"] = self.ruyi_tested
 
         clouds_testing = {}
         nodes_testing = {}
@@ -158,6 +166,10 @@ class JenkinsServer:
         })
 
     def test(self):
+        if self.ruyi_tested:
+            logger.debug("Ruyi v{} alredy tested".format(self.ruyi_version))
+            return
+
         self.ruyi_testing = True
         self._status_store()
 

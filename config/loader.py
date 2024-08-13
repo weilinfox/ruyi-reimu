@@ -31,7 +31,7 @@ class Config:
         self.ruyi_repo_mirrors = {}
         self.youmu_jenkins = {}
 
-        self.reimu_status = {'version': "0.0.0", "date": "19700101", "testing": False}
+        self.reimu_status = {'version': "0.0.0", "date": "19700101", "testing": False, "tested": False}
 
         self.tmpdir = Path("/tmp/ruyi_reimu")
         self.cache_dir = Path('~/.cache/ruyi-reimu').expanduser()
