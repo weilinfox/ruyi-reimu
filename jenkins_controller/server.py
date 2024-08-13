@@ -46,6 +46,8 @@ class JenkinsServer:
         self.ruyi_testing = False
         self.ruyi_tested = False
 
+        self.max_retest = 3
+
     def load(self):
         if not reimu_config.ready():
             raise Exception("ruyi-reimu not configured")
@@ -112,7 +114,7 @@ class JenkinsServer:
         self._check()
 
         # Restore status
-        if self.ruyi_testing:
+        if self.ruyi_testing or not self.ruyi_tested:
             ruyi_status = reimu_config.read_cache_status(self.ruyi_version)
             if not ruyi_status:
                 self.ruyi_testing = False
@@ -131,6 +133,13 @@ class JenkinsServer:
                     self.clouds[c[0]]["testing"] = c[1]
                 for n in ruyi_status["nodes_testing"].items():
                     self.nodes[n[0]]["testing"] = n[1]
+
+                # Check retest status
+                for i in self.retest_info.items():
+                    if i[1]["count"] == self.max_retest:
+                        self.max_retest += 3
+                    if i[0] not in self.testing_platforms.keys() and i[0] not in self.configured_platforms.keys():
+                        self.queued_platforms.append(i[0])
 
                 logger.info("Test status for ruyi v{} load from cache".format(self.ruyi_version))
 
@@ -201,13 +210,15 @@ class JenkinsServer:
             for i in range(0, len(end_queue)):
                 if end_status[i]:
                     self.tested_platforms.append(self.testing_platforms[end_queue[i] - i])
+                    if self.testing_platforms[end_queue[i] - i] in self.retest_info.keys():
+                        self.retest_info.pop(self.testing_platforms[end_queue[i] - i])
                 else:
                     # retest
                     if self.testing_platforms[end_queue[i] - i] in self.retest_info:
                         self.retest_info[self.testing_platforms[end_queue[i] - i]]["count"] += 1
                     else:
                         self.retest_info[self.testing_platforms[end_queue[i] - i]] = {"count": 1}
-                    if self.retest_info[self.testing_platforms[end_queue[i] - i]]["count"] > 3:
+                    if self.retest_info[self.testing_platforms[end_queue[i] - i]]["count"] > self.max_retest:
                         self.retest_info[self.testing_platforms[end_queue[i] - i]]["count"] -= 1
                         logger.info('Platform {} test failed 3 times, will not retest'
                                     .format(self.testing_platforms[end_queue[i] - i]))
@@ -298,6 +309,10 @@ class JenkinsServer:
                 log_delay = int(15 * 60 / sleep_time)
 
         self.ruyi_testing = False
+        if not self.retest_info:
+            self.ruyi_tested = True
+
+        self._status_store()
         logger.info("Jenkins test done.\n\n")
 
     def _check(self):
