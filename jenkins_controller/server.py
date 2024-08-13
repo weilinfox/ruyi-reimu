@@ -34,8 +34,11 @@ class JenkinsServer:
         self.testing_platforms = []
         self.testing_platforms_info = []
         self.testing_nodes = []
+        # retest info
+        self.retest_info = {}
         # tested
         self.tested_platforms = []
+        self.tested_info = {}
 
         # reimu_config.reimu_status
         self.ruyi_version = ""
@@ -120,7 +123,9 @@ class JenkinsServer:
                 self.testing_platforms = ruyi_status["testing_platforms"]
                 self.testing_platforms_info = ruyi_status["testing_platforms_info"]
                 self.testing_nodes = ruyi_status["testing_nodes"]
+                self.retest_info = ruyi_status["retest_info"]
                 self.tested_platforms = ruyi_status["tested_platforms"]
+                self.tested_info = ruyi_status["tested_info"]
 
                 for c in ruyi_status["clouds_testing"].items():
                     self.clouds[c[0]]["testing"] = c[1]
@@ -163,7 +168,9 @@ class JenkinsServer:
             "testing_platforms": self.testing_platforms,
             "testing_platforms_info": self.testing_platforms_info,
             "testing_nodes": self.testing_nodes,
+            "retest_info": self.retest_info,
             "tested_platforms": self.tested_platforms,
+            "tested_info": self.tested_info,
             "clouds_testing": clouds_testing,
             "nodes_testing": nodes_testing,
         })
@@ -177,7 +184,6 @@ class JenkinsServer:
         self._status_store()
 
         log_delay = 0
-        retest_info = {}
 
         while self.queued_platforms or self.testing_platforms:
             # check testing queue
@@ -188,6 +194,7 @@ class JenkinsServer:
                 if end:
                     end_queue.append(i)
                     end_status.append(info["result"] == "SUCCESS")
+                    self.tested_info[self.testing_platforms[i]][-1]["status"] = info["result"]
                     logger.info('Platform {} test finished, status "{}"'
                                 .format(self.testing_platforms[i], info["result"]))
 
@@ -196,12 +203,12 @@ class JenkinsServer:
                     self.tested_platforms.append(self.testing_platforms[end_queue[i] - i])
                 else:
                     # retest
-                    if self.testing_platforms[end_queue[i] - i] in retest_info:
-                        retest_info[self.testing_platforms[end_queue[i] - i]]["count"] += 1
+                    if self.testing_platforms[end_queue[i] - i] in self.retest_info:
+                        self.retest_info[self.testing_platforms[end_queue[i] - i]]["count"] += 1
                     else:
-                        retest_info[self.testing_platforms[end_queue[i] - i]] = {"count": 1}
-                    if retest_info[self.testing_platforms[end_queue[i] - i]]["count"] > 3:
-                        retest_info[self.testing_platforms[end_queue[i] - i]]["count"] -= 1
+                        self.retest_info[self.testing_platforms[end_queue[i] - i]] = {"count": 1}
+                    if self.retest_info[self.testing_platforms[end_queue[i] - i]]["count"] > 3:
+                        self.retest_info[self.testing_platforms[end_queue[i] - i]]["count"] -= 1
                         logger.info('Platform {} test failed 3 times, will not retest'
                                     .format(self.testing_platforms[end_queue[i] - i]))
                     else:
@@ -275,6 +282,9 @@ class JenkinsServer:
                 self.testing_platforms.append(t[0][0])
                 self.testing_nodes.append(t[0][1])
                 self.testing_platforms_info.append(t[1])
+                if t[0][0] not in self.tested_info.keys():
+                    self.tested_info[t[0][0]] = []
+                self.tested_info[t[0][0]].append({"url": t[1]["url"], "status": "TESTING"})
                 logger.info('Platform {} is testing, check url {}'.format(t[0][0], t[1]["url"]))
 
             self._status_store()
