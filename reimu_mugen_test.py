@@ -6,5 +6,11 @@ from jenkins_controller.server import youmu_jenkins
 if __name__ == "__main__":
     reimu_config.load()
     youmu_jenkins.load()
-    youmu_jenkins.test()
 
+    while True:
+        try:
+            youmu_jenkins.test()
+        except Exception:
+            pass
+        else:
+            break

@@ -159,6 +159,7 @@ class JenkinsServer:
 
     def test(self):
         self.ruyi_testing = True
+        self._status_store()
 
         for p in self.test_platforms:
             self.queued_platforms.append(p)
@@ -205,6 +206,8 @@ class JenkinsServer:
             if self.testing_platforms and not end_queue and not log_delay:
                 logger.info("No platform test finished")
 
+            self._status_store()
+
             # find new platform to test
             wait_queue = []
             wait_node = []
@@ -246,6 +249,8 @@ class JenkinsServer:
                 self.configured_platforms.append((wait_queue[i], wait_node[i], bid))
                 self.queued_platforms.remove(wait_queue[i])
 
+                self._status_store()
+
             # check build started
             testing_queue = []
             for p in self.configured_platforms:
@@ -258,6 +263,8 @@ class JenkinsServer:
                 self.testing_nodes.append(t[0][1])
                 self.testing_platforms_info.append(t[1])
                 logger.info('Platform {} is testing, check url {}'.format(t[0][0], t[1]["url"]))
+
+            self._status_store()
 
             # sleep 10s
             sleep_time = 10

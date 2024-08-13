@@ -52,7 +52,7 @@ version_match = "^[0-9]+$"
 ruyi 上游版本跟踪和自动化测试调度和报告汇总。
 
 + [x] Jenkins 配置
-+ [ ] ruyi 版本获取
++ [x] ruyi 版本获取
 + [ ] ruyi-mugen 测试版本更改
 + [x] 测试调度
 + [ ] 自动重测
