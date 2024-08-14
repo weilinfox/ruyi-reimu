@@ -150,7 +150,7 @@ class JenkinsServer:
             if self.ruyi_version != tag:
                 self.ruyi_version = tag
                 shanghai = time.gmtime(time.time()+28800)
-                self.ruyi_test_date = "{}{}{}".format(shanghai.tm_year, shanghai.tm_mon, shanghai.tm_mday)
+                self.ruyi_test_date = "{:04}{:02}{:02}".format(shanghai.tm_year, shanghai.tm_mon, shanghai.tm_mday)
                 self.ruyi_tested = False
 
                 for p in self.test_platforms:
