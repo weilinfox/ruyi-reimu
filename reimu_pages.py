@@ -195,8 +195,10 @@ def reimu_sub(request_path: str):
         show_tested_info[pl]["reimu_label"] += "TESTING,&nbsp;"
     for pl in reimu_cache[request_path]['tested_platforms']:
         show_tested_info[pl]["reimu_label"] += "TESTED,&nbsp;"
-    for pv in show_tested_info.values():
-        pv["reimu_label"] = pv["reimu_label"][:-7]
+    for pv in show_tested_info.items():
+        if pv[1]["reimu_label"] == "" and pv[0] in reimu_cache[request_path]["retest_info"]:
+            pv[1]["reimu_label"] = "BLOCKED,&nbsp;"
+        pv[1]["reimu_label"] = pv[1]["reimu_label"][:-7]
     for it in reimu_cache[request_path]["tested_info"].items():
         # tested_info
         show_tested_info[it[0]]["jobs"] = it[1]
@@ -213,6 +215,8 @@ def reimu_sub(request_path: str):
             reimu_label_style = ' style="color:grey"'
         elif it[1]["reimu_label"] == "QUEUED":
             reimu_label_style = ' style="color:yellow"'
+        elif it[1]["reimu_label"] == "BLOCKED":
+            reimu_label_style = ' style="color:red"'
         status_single = ""
         status_body += '''
                     <tr>
