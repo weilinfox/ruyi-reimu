@@ -214,7 +214,7 @@ def reimu_sub(request_path: str):
         elif it[1]["reimu_label"] == "CONFIGURED":
             reimu_label_style = ' style="color:grey"'
         elif it[1]["reimu_label"] == "QUEUED":
-            reimu_label_style = ' style="color:yellow"'
+            reimu_label_style = ' style="color:burlywood"'
         elif it[1]["reimu_label"] == "BLOCKED":
             reimu_label_style = ' style="color:red"'
         status_single = ""
