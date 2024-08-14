@@ -177,7 +177,7 @@ def reimu_sub(request_path: str):
         for lb in it[1]["labels"]:
             agent_label += lb + ",&nbsp;"
         show_tested_info[it[0]] = {"agent_label": agent_label[:-7], "reimu_label": "",
-                                   "jobs": [{"url": "-", "status": "-"}]}
+                                   "jobs": [{"url": "", "status": "-"}]}
         # reimu_label
     for pl in reimu_cache[request_path]['queued_platforms']:
         show_tested_info[pl]["reimu_label"] += "QUEUED,&nbsp;"
@@ -208,16 +208,23 @@ def reimu_sub(request_path: str):
                 status_single = '''
                     <tr>
                         <td><a href="{0}" target="_blank">{0}</a></td>
-                        <td>{1}</td>
+                        <td{2}>{1}</td>
                     </tr>
                 '''
             else:
                 status_single = '''
                         <td><a href="{0}" target="_blank">{0}</a></td>
-                        <td>{1}</td>
+                        <td{2}>{1}</td>
                     </tr>
                 '''
-            status_body += status_single.format(job["url"], job["status"])
+            style = ""
+            if job["status"] == "SUCCESS":
+                style = ' style="color:greenyellow"'
+            elif job["status"] == "TESTING":
+                style = ' style="color:yellow"'
+            elif job["status"] == "FAILURE":
+                style = ' style="color:red"'
+            status_body += status_single.format(job["url"], job["status"], style)
 
     page += '''
             <h2>详细信息</h2>
