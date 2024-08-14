@@ -176,7 +176,8 @@ def reimu_sub(request_path: str):
         agent_label = ""
         for lb in it[1]["labels"]:
             agent_label += lb + ",&nbsp;"
-        show_tested_info[it[0]] = {"agent_label": agent_label[:-7], "reimu_label": ""}
+        show_tested_info[it[0]] = {"agent_label": agent_label[:-7], "reimu_label": "",
+                                   "jobs": [{"url": "-", "status": "-"}]}
         # reimu_label
     for pl in reimu_cache[request_path]['queued_platforms']:
         show_tested_info[pl]["reimu_label"] += "QUEUED,&nbsp;"
