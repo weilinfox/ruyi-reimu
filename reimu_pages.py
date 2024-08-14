@@ -102,8 +102,8 @@ def reimu_index():
 
     # tail
     page += '''
-            <p></p>
-            <p></p>
+            <p>&nbsp;</p>
+            <p>&nbsp;</p>
             <footer>
                 <p>Copyright &copy; 2023-2024 桜風の狐</p>
             </footer>
@@ -251,11 +251,14 @@ def reimu_sub(request_path: str):
                 </tbody>
             </table>
     '''
+    page += '''
+            <p>共计&nbsp;{}&nbsp;个测试平台</p>
+    '''.format(len(show_tested_info))
 
     # tail
     page += '''
-            <p></p>
-            <p></p>
+            <p>&nbsp;</p>
+            <p>&nbsp;</p>
             <footer>
                 <p>Copyright &copy; 2023-2024 桜風の狐</p>
             </footer>
