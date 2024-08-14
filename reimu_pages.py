@@ -170,14 +170,39 @@ def reimu_sub(request_path: str):
         '''.format(reimu_status["date"], "Running" if reimu_status["testing"] else "Idle", reimu_status["tested"])
 
     # tested info
-    status_body = ""
+    show_tested_info = {}
+    for it in reimu_cache[request_path]['test_platforms'].items():
+        # agent_label
+        agent_label = ""
+        for lb in it[1]["labels"]:
+            agent_label += lb + ",&nbsp;"
+        show_tested_info[it[0]] = {"agent_label": agent_label[:-7], "reimu_label": ""}
+        # reimu_label
+    for pl in reimu_cache[request_path]['queued_platforms']:
+        show_tested_info[pl]["reimu_label"] += "QUEUED,&nbsp;"
+    for pl in reimu_cache[request_path]['configured_platforms']:
+        show_tested_info[pl[0]]["reimu_label"] += "CONFIGURED,&nbsp;"
+    for pl in reimu_cache[request_path]['testing_platforms']:
+        show_tested_info[pl]["reimu_label"] += "TESTING,&nbsp;"
+    for pl in reimu_cache[request_path]['tested_platforms']:
+        show_tested_info[pl]["reimu_label"] += "TESTED,&nbsp;"
+    for pv in show_tested_info.values():
+        pv["reimu_label"] = pv["reimu_label"][:-7]
     for it in reimu_cache[request_path]["tested_info"].items():
+        # tested_info
+        show_tested_info[it[0]]["jobs"] = it[1]
+
+    # gen tested info html
+    status_body = ""
+    for it in show_tested_info.items():
         status_single = ""
         status_body += '''
                     <tr>
-                        <td rowspan="{}">{}</td>
-        '''.format(len(it[1]), it[0])
-        for job in it[1]:
+                        <td rowspan="{0}">{1}</td>
+                        <td rowspan="{0}">{2}</td>
+                        <td rowspan="{0}">{3}</td>
+        '''.format(len(it[1]["jobs"]), it[0], it[1]["agent_label"], it[1]["reimu_label"])
+        for job in it[1]["jobs"]:
             if status_single:
                 status_single = '''
                     <tr>
@@ -194,11 +219,13 @@ def reimu_sub(request_path: str):
             status_body += status_single.format(job["url"], job["status"])
 
     page += '''
-            <h2>Tested Info</h2>
+            <h2>详细信息</h2>
             <table border="1">
                 <thead>
                     <tr>
                         <th>测试平台</th>
+                        <th>测试平台标志</th>
+                        <th>测试过程标志</th>
                         <th>进程</th>
                         <th>状态</th>
                     </tr>
