@@ -219,9 +219,9 @@ def reimu_sub(request_path: str):
                 '''
             style = ""
             if job["status"] == "SUCCESS":
-                style = ' style="color:greenyellow"'
+                style = ' style="color:green"'
             elif job["status"] == "TESTING":
-                style = ' style="color:yellow"'
+                style = ' style="color:gray"'
             elif job["status"] == "FAILURE":
                 style = ' style="color:red"'
             status_body += status_single.format(job["url"], job["status"], style)
