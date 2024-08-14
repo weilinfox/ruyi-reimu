@@ -148,7 +148,7 @@ def reimu_sub(request_path: str):
     <html>
         <head>
             <meta charset="utf-8" />
-            <title>测试详情 v{0}</title>
+            <title>ruyi-reimu 测试详情 v{0}</title>
             {1}
         </head>
         <body>
@@ -267,6 +267,7 @@ def reimu_sub(request_path: str):
     # tail
     page += '''
             <p>&nbsp;</p>
+            <p><a href="/">←回到首页</a></p>
             <p>&nbsp;</p>
             <footer>
                 <p>Copyright &copy; 2023-2024 桜風の狐</p>
