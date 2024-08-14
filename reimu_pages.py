@@ -58,7 +58,8 @@ def reimu_index():
     <!DOCTYPE html>
     <html>
         <head>
-            <meta charset="utf-8">
+            <meta charset="utf-8" />
+            <meta http-equiv="refresh" content="30" />
             <title>ruyi-reimu 自动化测试调度程序</title>
         </head>
         <body>
@@ -136,16 +137,23 @@ def reimu_sub(request_path: str):
     </html>''', 404
 
     # make page
+    headers = ""
+    if reimu_status["version"] == request_path and (reimu_status["testing"] or not reimu_status["tested"]):
+        headers += '''
+            <meta http-equiv="refresh" content="30" />
+        '''
+
     page = '''
     <!DOCTYPE html>
     <html>
         <head>
-            <meta charset="utf-8">
+            <meta charset="utf-8" />
             <title>版本历史 v{0}</title>
+            {1}
         </head>
         <body>
             <h1>版本历史 v{0}</h1>
-    '''.format(request_path)
+    '''.format(request_path, headers)
 
     # testing
     if reimu_status["version"] == request_path:
