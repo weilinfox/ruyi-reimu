@@ -58,6 +58,9 @@ def reimu_index():
     <!DOCTYPE html>
     <html>
         <head>
+            <style>
+                html { color-scheme: light dark; }
+            </style>
             <meta charset="utf-8" />
             <meta http-equiv="refresh" content="30" />
             <title>ruyi-reimu 自动化测试调度程序</title>
@@ -91,7 +94,7 @@ def reimu_index():
     # history
     his = ""
     for k in reimu_cache.keys():
-        his += '<li><a href="/{0}" target="_blank">{0}</a></li>\n'.format(k)
+        his += '<li><a href="/{0}">{0}</a></li>\n'.format(k)
 
     page += '''
             <h2>测试详情</h2>
@@ -127,6 +130,9 @@ def reimu_sub(request_path: str):
     <!DOCTYPE html>
     <html>
         <head>
+            <style>
+                html { color-scheme: light dark; }
+            </style>
             <meta charset="utf-8">
             <title>404</title>
         </head>
@@ -147,6 +153,9 @@ def reimu_sub(request_path: str):
     <!DOCTYPE html>
     <html>
         <head>
+            <style>
+                html {{ color-scheme: light dark; }}
+            </style>
             <meta charset="utf-8" />
             <title>ruyi-reimu 测试详情 v{0}</title>
             {1}
@@ -214,7 +223,7 @@ def reimu_sub(request_path: str):
         elif it[1]["reimu_label"] == "CONFIGURED":
             reimu_label_style = ' style="color:grey"'
         elif it[1]["reimu_label"] == "QUEUED":
-            reimu_label_style = ' style="color:burlywood"'
+            reimu_label_style = ' style="color:yellow"'
         elif it[1]["reimu_label"] == "BLOCKED":
             reimu_label_style = ' style="color:red"'
         status_single = ""
