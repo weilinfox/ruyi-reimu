@@ -94,7 +94,7 @@ def reimu_index():
         his += '<li><a href="/{0}" target="_blank">{0}</a></li>\n'.format(k)
 
     page += '''
-            <h2>版本历史</h2>
+            <h2>测试详情</h2>
             <ul>
     ''' + his + '''
             </ul>
@@ -148,11 +148,11 @@ def reimu_sub(request_path: str):
     <html>
         <head>
             <meta charset="utf-8" />
-            <title>版本历史 v{0}</title>
+            <title>测试详情 v{0}</title>
             {1}
         </head>
         <body>
-            <h1>版本历史 v{0}</h1>
+            <h1>测试详情 v{0}</h1>
     '''.format(request_path, headers)
 
     # testing
@@ -204,13 +204,22 @@ def reimu_sub(request_path: str):
     # gen tested info html
     status_body = ""
     for it in show_tested_info.items():
+        reimu_label_style = ""
+        if it[1]["reimu_label"] == "TESTED":
+            reimu_label_style = ' style="color:green"'
+        elif it[1]["reimu_label"] == "TESTING":
+            reimu_label_style = ' style="color:grey"'
+        elif it[1]["reimu_label"] == "CONFIGURED":
+            reimu_label_style = ' style="color:grey"'
+        elif it[1]["reimu_label"] == "QUEUED":
+            reimu_label_style = ' style="color:yellow"'
         status_single = ""
         status_body += '''
                     <tr>
                         <td rowspan="{0}">{1}</td>
                         <td rowspan="{0}">{2}</td>
-                        <td rowspan="{0}">{3}</td>
-        '''.format(len(it[1]["jobs"]), it[0], it[1]["agent_label"], it[1]["reimu_label"])
+                        <td rowspan="{0}"{4}>{3}</td>
+        '''.format(len(it[1]["jobs"]), it[0], it[1]["agent_label"], it[1]["reimu_label"], reimu_label_style)
         for job in it[1]["jobs"]:
             if status_single:
                 status_single = '''
