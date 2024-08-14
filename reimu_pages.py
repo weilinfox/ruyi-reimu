@@ -124,4 +124,4 @@ def reimu_sub(request_path: str):
 if __name__ == "__main__":
     reimu_config.load()
 
-    reimu_server.run(debug=True, port=4646)
+    reimu_server.run(debug=True, host="0.0.0.0", port=4646)
