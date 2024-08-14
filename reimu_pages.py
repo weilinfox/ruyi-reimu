@@ -68,7 +68,7 @@ def reimu_index():
     # status
     page += '''
             <h2>版本测试&nbsp;v{}</h2>
-            <table>
+            <table border="1">
                 <thead>
                     <tr>
                         <th>开始时间</th>
@@ -151,7 +151,7 @@ def reimu_sub(request_path: str):
     if reimu_status["version"] == request_path:
         page += '''
             <h2>测试状态</h2>
-            <table>
+            <table border="1">
                 <thead>
                     <tr>
                         <th>开始时间</th>
@@ -167,12 +167,11 @@ def reimu_sub(request_path: str):
                     </tr>
                 </tbody>
             </table>
-        '''.format(reimu_status["version"], reimu_status["date"],
-                   "Running" if reimu_status["testing"] else "Idle", reimu_status["tested"])
+        '''.format(reimu_status["date"], "Running" if reimu_status["testing"] else "Idle", reimu_status["tested"])
 
     # tested info
     status_body = ""
-    for it in reimu_status["tested_info"].items():
+    for it in reimu_cache[request_path]["tested_info"].items():
         status_single = ""
         status_body += '''
                     <tr>
@@ -192,11 +191,11 @@ def reimu_sub(request_path: str):
                         <td>{}</td>
                     </tr>
                 '''
-            status_body += status_single.format(job["utl"], job["status"])
+            status_body += status_single.format(job["url"], job["status"])
 
     page += '''
             <h2>Tested Info</h2>
-            <table>
+            <table border="1">
                 <thead>
                     <tr>
                         <th>测试平台</th>
