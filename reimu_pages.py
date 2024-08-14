@@ -35,7 +35,7 @@ def check_reimu():
                 if d.name == "0.0.0":
                     continue
                 if d.is_dir() and reimu_config.check_cache_status(d.name).exists():
-                    status.update({d.name: auto_load(reimu_config.check_cache_status(d.name))})
+                    cache.update({d.name: auto_load(reimu_config.check_cache_status(d.name))})
             reimu_cache, reimu_status = cache, status
         except Exception as e:
             on_error = True
@@ -57,6 +57,10 @@ def reimu_index():
     page = '''
     <!DOCTYPE html>
     <html>
+        <head>
+            <meta charset="utf-8">
+            <title>ruyi-reimu 自动化测试调度程序</title>
+        </head>
         <body>
             <h1>ruyi-reimu 自动化测试调度程序</h1>
     '''
@@ -116,7 +120,18 @@ def reimu_sub(request_path: str):
     check_reimu()
 
     if request_path not in reimu_status.keys():
-        return flask.redirect('/404')
+        return '''
+    <!DOCTYPE html>
+    <html>
+        <head>
+            <meta charset="utf-8">
+            <title>404</title>
+        </head>
+        <body>
+            <h1>404</h1>
+            <h2>咱也不知道怎么说，反正就是没找到</h2>
+        </body>
+    </html>''', 404
 
     return request_path
 
