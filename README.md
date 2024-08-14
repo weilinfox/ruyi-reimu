@@ -2,6 +2,8 @@
 
 RuyiSDK 测试调度程序
 
+调度程序状态请查看公开的页面 [reimu.gensokyo.ac.cn](http://reimu.gensokyo.ac.cn/)
+
 ## reimu_check_latest.py
 
 [packages-index](https://github.com/ruyisdk/packages-index/) board image 上游版本跟踪。
