@@ -116,10 +116,12 @@ def reimu_index():
 @reimu_server.route("/<path:request_path>")
 def reimu_sub(request_path: str):
     global reimu_status
+    global reimu_cache
 
     check_reimu()
 
-    if request_path not in reimu_status.keys():
+    # 404
+    if request_path not in reimu_cache.keys():
         return '''
     <!DOCTYPE html>
     <html>
@@ -133,7 +135,93 @@ def reimu_sub(request_path: str):
         </body>
     </html>''', 404
 
-    return request_path
+    # make page
+    page = '''
+    <!DOCTYPE html>
+    <html>
+        <head>
+            <meta charset="utf-8">
+            <title>版本历史 v{0}</title>
+        </head>
+        <body>
+            <h1>版本历史 v{0}</h1>
+    '''.format(request_path)
+
+    # testing
+    if reimu_status["version"] == request_path:
+        page += '''
+            <h2>测试状态</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>开始时间</th>
+                        <th>测试状态</th>
+                        <th>测试完成</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>{}</td>
+                        <td>{}</td>
+                        <td>{}</td>
+                    </tr>
+                </tbody>
+            </table>
+        '''.format(reimu_status["version"], reimu_status["date"],
+                   "Running" if reimu_status["testing"] else "Idle", reimu_status["tested"])
+
+    # tested info
+    status_body = ""
+    for it in reimu_status["tested_info"].items():
+        status_single = ""
+        status_body += '''
+                    <tr>
+                        <td rowspan="{}">{}</td>
+        '''.format(len(it[1]), it[0])
+        for job in it[1]:
+            if status_single:
+                status_single = '''
+                    <tr>
+                        <td>{}</td>
+                        <td>{}</td>
+                    </tr>
+                '''
+            else:
+                status_single = '''
+                        <td>{}</td>
+                        <td>{}</td>
+                    </tr>
+                '''
+            status_body += status_single.format(job["utl"], job["status"])
+
+    page += '''
+            <h2>Tested Info</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>测试平台</th>
+                        <th>进程</th>
+                        <th>状态</th>
+                    </tr>
+                </thead>
+                <tbody>
+    ''' + status_body + '''
+                </tbody>
+            </table>
+    '''
+
+    # tail
+    page += '''
+            <p></p>
+            <p></p>
+            <footer>
+                <p>Copyright &copy; 2023-2024 桜風の狐</p>
+            </footer>
+        </body>
+    </html>
+    '''
+
+    return page
 
 
 if __name__ == "__main__":
