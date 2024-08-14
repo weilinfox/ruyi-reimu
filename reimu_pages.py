@@ -207,14 +207,14 @@ def reimu_sub(request_path: str):
             if status_single:
                 status_single = '''
                     <tr>
-                        <td>{}</td>
-                        <td>{}</td>
+                        <td><a href="{0}" target="_blank">{0}</a></td>
+                        <td>{1}</td>
                     </tr>
                 '''
             else:
                 status_single = '''
-                        <td>{}</td>
-                        <td>{}</td>
+                        <td><a href="{0}" target="_blank">{0}</a></td>
+                        <td>{1}</td>
                     </tr>
                 '''
             status_body += status_single.format(job["url"], job["status"])
