@@ -1,4 +1,5 @@
 import jenkins
+import math
 import time
 import xml.etree.ElementTree as ElementTree
 
@@ -135,11 +136,15 @@ class JenkinsServer:
                     self.nodes[n[0]]["testing"] = n[1]
 
                 # Check retest status
+                # retest blocked platforms
                 for i in self.retest_info.items():
-                    if i[1]["count"] == self.max_retest:
-                        self.max_retest += 3
-                    if i[0] not in self.testing_platforms.keys() and i[0] not in self.configured_platforms.keys():
+                    if i[1]["count"] >= self.max_retest:
+                        self.max_retest = math.ceil(i[1]["count"] / 3) * 3
+                    if i[0] not in self.testing_platforms:
                         self.queued_platforms.append(i[0])
+                for p in self.configured_platforms:
+                    if p[0] in self.queued_platforms:
+                        self.queued_platforms.remove(p[0])
 
                 logger.info("Test status for ruyi v{} load from cache".format(self.ruyi_version))
 
@@ -400,6 +405,7 @@ class JenkinsServer:
     def _jenkins_job_check_started(self, bid: int) -> dict:
         self._new_server()
 
+        # Todo: missing link, if there is a new build, use that build
         info = self.server.get_queue_item(bid)
         if (info and "executable" in info
                 and info["executable"] and "number" in info["executable"] and "url" in info["executable"]):
