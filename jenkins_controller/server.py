@@ -194,7 +194,7 @@ class JenkinsServer:
 
         log_delay = 0
 
-        while self.queued_platforms or self.testing_platforms:
+        while self.queued_platforms or self.configured_platforms or self.testing_platforms:
             # check testing queue
             end_queue = []
             end_status = []
