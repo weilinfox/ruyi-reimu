@@ -269,6 +269,7 @@ class JenkinsServer:
                         break
             if self.queued_platforms and not wait_queue and not log_delay:
                 logger.info("{} platforms stuck in queue".format(len(self.queued_platforms)))
+                # Todo: reload agent status
 
             # configure job and send build operation
             for i in range(0, len(wait_queue)):
