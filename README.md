@@ -68,3 +68,9 @@ ruyi 上游版本跟踪和自动化测试调度和报告汇总。
 ```bash
 ./reimu_mugen_test.sh
 ```
+
+启动 WebUI
+
+```bash
+python reimu_pages.py
+```
