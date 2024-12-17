@@ -16,6 +16,16 @@ class ScriptGenerator:
                              "gentoo": "{0} emerge --color=n --getbinpkg --noreplace --autounmask=y app-admin/sudo"
                                        " sys-apps/file dev-tcltk/expect dev-vcs/git sys-process/psmisc dev-build/make"
                                        " dev-python/paramiko dev-python/six app-arch/tar app-misc/jq"}
+    # yq lit and FileCheck install manually
+    CMD_LITESTER_DEP_INSTALL = {"debian": "{0} apt-get install -y sudo file expect git make"
+                                          " tar jq",
+                                "fedora": "{0} dnf install -y sudo file expect git make"
+                                          " tar jq",
+                                "archlinux": "{0} pacman --need --noconfirm -S sudo file expect git make"
+                                          " tar jq",
+                                "gentoo": "{0} emerge --color=n --getbinpkg --noreplace --autounmask=y app-admin/sudo"
+                                          " sys-apps/file dev-tcltk/expect dev-vcs/git dev-build/make"
+                                          " app-arch/tar app-misc/jq"}
 
     def __init__(self, gen_type: str, distro_type: str, cfg: dict, env: dict):
         self.distro_type = distro_type
@@ -28,7 +38,12 @@ class ScriptGenerator:
 
         if gen_type == "mugen":
             self.test_platform = cfg["test_platform"]
+            self.test_date = ""
             self._gen_mugen_test_cmds()
+        elif gen_type == "litester":
+            self.test_platform = cfg["test_platform"]
+            self.test_date = cfg["test_date"]
+            self._gen_litester_test_cmds()
         elif gen_type == "upgrade":
             self._gen_upgrade_cmds()
         else:
@@ -65,6 +80,29 @@ class ScriptGenerator:
                           "mv ruyi-test-logs_failed.tar.gz ruyi-test-{1}-logs_failed.tar.gz",
                           "mv ruyi_report/*.md ."])
 
+    def _gen_litester_test_cmds(self):
+        self._gen_upgrade_cmds()
+        self._gen_clean_cmds()
+        self._gen_env_cmds()
+
+        self.cmds.append(ScriptGenerator.CMD_LITESTER_DEP_INSTALL[self.distro_type])
+
+        self.cmds.extend(["git clone --depth=1 https://github.com/weilinfox/ruyi-litester.git .",
+                          "git clone --depth=1 https://github.com/weilinfox/ruyi-litester-reports.git",
+                          "./rit.bash ruyi -p ruyi-bin",
+                          """cat >> ruyi-litester-reports/report_my_configs.sh <<EOF
+TEST_LITESTER_PATH=$(pwd)
+TEST_START_TIME={2}
+EOF
+""",
+                          "cp -v ruyi_ruyi-bin_ruyi-basic_*.log ruyi-litester-reports/report_tmpl/26test_log.md",
+                          "bash ruyi-litester-reports/report_gen.sh {1}",
+                          "{0} chown -R $USER:$USER ./* ./.*",
+                          "rm -f *.md",
+                          "mv ruyi-test-logs.tar.gz ruyi-test-{1}-logs.tar.gz",
+                          "mv ruyi-test-logs_failed.tar.gz ruyi-test-{1}-logs_failed.tar.gz",
+                          "mv ruyi_report/*.md ."])
+
     def _gen_upgrade_cmds(self):
         self.cmds.append(ScriptGenerator.CMD_UPGRADE[self.distro_type])
 
@@ -79,7 +117,7 @@ class ScriptGenerator:
         cmds = ""
         for c in self.cmds:
             cmds += c + "\n"
-        return cmds.format("sudo" if self.sudo else "", self.test_platform)
+        return cmds.format("sudo" if self.sudo else "", self.test_platform, self.test_date)
 
     def get_artifacts(self) -> str:
         if self.gen_type != "mugen":
