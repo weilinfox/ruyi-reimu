@@ -120,7 +120,7 @@ EOF
         return cmds.format("sudo" if self.sudo else "", self.test_platform, self.test_date)
 
     def get_artifacts(self) -> str:
-        if self.gen_type != "mugen":
-            raise AssertException("Only generate type mugen have artifacts")
+        if self.gen_type not in ["mugen", "litester"]:
+            raise AssertException("Only generate type mugen/litester have artifacts")
 
         return "ruyi-test-{0}-logs.tar.gz, ruyi-test-{0}-logs_failed.tar.gz, *.md".format(self.test_platform)
