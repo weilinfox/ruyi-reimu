@@ -89,7 +89,7 @@ class ScriptGenerator:
 
         self.cmds.extend(["git clone --depth=1 https://github.com/weilinfox/ruyi-litester.git .",
                           "git clone --depth=1 https://github.com/weilinfox/ruyi-litester-reports.git",
-                          "rm -rf /tmp/rit.bash"
+                          "rm -rf /tmp/rit.bash",
                           "./rit.bash ruyi -p ruyi-bin",
                           """cat >> ruyi-litester-reports/report_my_configs.sh <<EOF
 TEST_LITESTER_PATH=$(pwd)
