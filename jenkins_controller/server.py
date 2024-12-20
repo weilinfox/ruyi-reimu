@@ -368,7 +368,7 @@ class JenkinsServer:
 
             et = ElementTree.fromstring(xml)
             ele = ElementTree.Element("displayName")
-            ele.text = "ruyi-reimu mugen 自动化测试"
+            ele.text = "ruyi-reimu 双周自动化测试"
             et.append(ele)
             ele = ElementTree.Element("description")
             ele.text = "由 ruyi-reimu 生成\n不建议手动修改"
