@@ -2,10 +2,10 @@ from utils.errors import AssertException
 
 
 class ScriptGenerator:
-    CMD_UPGRADE = {"debian": "{0} apt-get update && {0} apt-get upgrade -y"
+    CMD_UPGRADE = {"debian": "{0} apt-get clean && {0} apt-get update && {0} apt-get upgrade -y"
                              " -o Dpkg::Options::=\"--force-confdef\" -o Dpkg::Options::=\"--force-confold\"",
                    "fedora": "{0} dnf upgrade -y",
-                   "archlinux": "{0} pacman --noconfirm -Syuu",
+                   "archlinux": "{0} echo Y | sudo pacman -Sc && {0} pacman --noconfirm -Syuu",
                    "gentoo": "{0} emerge-webrsync"}
     CMD_MUGEN_DEP_INSTALL = {"debian": "{0} apt-get install -y sudo file expect git psmisc iputils-ping make"
                                        " python3-paramiko python3-six tar jq",
